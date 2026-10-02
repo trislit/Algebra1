@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1E5C86">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Algebra">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Algebra 1 Sessions</title>
+<style>
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: one graph-paper column; a sticky nav, then one view at a time (home, session, progress, guide). */
+:root{
+  --bg:#EEF2F5; --grid:#DCE4EA; --paper:#FFFFFF; --ink:#18242F; --muted:#5B6B78; --line:#CBD5DD;
+  --accent:#1E5C86; --accent-ink:#FFFFFF; --accent-soft:#DDEAF3; --mark:#FBE7A1; --mark-ink:#4A3A00;
+  --ok:#1F7A4A; --ok-soft:#DDF1E5; --no:#B3362C; --no-soft:#F8E1DE;
+  --f-display:ui-rounded, "SF Pro Rounded", "Segoe UI Variable Display", "Segoe UI", Roboto, system-ui, sans-serif;
+  --f-body:-apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+  --f-math:"STIX Two Text", "Cambria Math", Cambria, "Times New Roman", "Noto Serif", Georgia, serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0F151B; --grid:#18222B; --paper:#17202A; --ink:#E4EBF1; --muted:#98A8B5; --line:#2A3744;
+  --accent:#7DB7E0; --accent-ink:#0B1620; --accent-soft:#1D3345; --mark:#5A4A12; --mark-ink:#FBE9B0;
+  --ok:#6FCF97; --ok-soft:#173826; --no:#F08A80; --no-soft:#3C1D1A; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0F151B; --grid:#18222B; --paper:#17202A; --ink:#E4EBF1; --muted:#98A8B5; --line:#2A3744;
+  --accent:#7DB7E0; --accent-ink:#0B1620; --accent-soft:#1D3345; --mark:#5A4A12; --mark-ink:#FBE9B0;
+  --ok:#6FCF97; --ok-soft:#173826; --no:#F08A80; --no-soft:#3C1D1A; color-scheme:dark }
+*{box-sizing:border-box}
+body{background-color:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;}
+.wrap{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:0 64px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:1.9rem} h2{font-size:1.35rem} h3{font-size:1.05rem}
+p{margin:0}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+i.v,.m i{font-family:var(--f-math);font-style:italic}
+.m{font-family:var(--f-math)}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:.85em;line-height:1.1;margin:0 .1em}
+.frac>span:last-child{border-top:1.5px solid currentColor;padding-top:1px;min-width:1em;text-align:center}
+mark{background:var(--mark);color:var(--mark-ink);padding:0 .2em;border-radius:3px}
+
+/* nav */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;padding-block:10px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:700;font-size:1.1rem;margin-right:auto;display:flex;align-items:center;gap:8px}
+.brand .sq{width:22px;height:22px;border:2px solid var(--accent);border-radius:4px;display:grid;place-items:center;font-family:var(--f-math);font-style:italic;color:var(--accent);font-size:.95rem}
+.nav{display:flex;gap:4px}
+.nav button{background:none;border:0;padding:6px 10px;border-radius:6px;color:var(--muted);font:inherit;font-weight:700;cursor:pointer}
+.nav button[aria-current="page"]{color:var(--ink);background:var(--accent-soft)}
+
+/* buttons */
+.btn{font:inherit;font-weight:700;border-radius:8px;padding:10px 16px;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1.2}
+.btn.sec{background:transparent;color:var(--accent)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--accent);padding:8px 10px}
+.btn.sm{padding:6px 10px;font-size:.9rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,.nav button:focus-visible,input:focus-visible,textarea:focus-visible,.key:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.view{display:grid;gap:28px;padding-top:24px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px}
+.chip{display:inline-block;font-size:.78rem;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.s0{} .chip.s1{background:var(--no-soft);color:var(--no);border-color:transparent}
+.chip.s2{background:var(--mark);color:var(--mark-ink);border-color:transparent}
+.chip.s3{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+
+/* home */
+.next{display:grid;gap:14px;border-left:0}
+.next .big{font-family:var(--f-display);font-size:1.6rem;font-weight:700}
+.topics{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.topics li{display:grid;grid-template-columns:2.2rem 1fr auto;gap:4px 12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.topics .num{font-family:var(--f-math);font-size:1.4rem;color:var(--muted);text-align:center}
+.topics .name{font-weight:700;min-width:0}
+.topics .sub{grid-column:2/4;display:flex;gap:2px;flex-wrap:wrap;margin-left:-10px}
+.topics .bar{height:4px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden;max-width:220px}
+.topics .bar span{display:block;height:100%;background:var(--accent)}
+.status{font-size:.9rem}
+
+/* session */
+.stages{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.stage{font-size:.82rem;font-weight:700;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.stage.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.stage.done{color:var(--ok);border-color:var(--ok)}
+.shead{display:grid;gap:12px}
+.shead .row{justify-content:space-between}
+.timer{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
+
+.prob{display:grid;gap:16px}
+.prob .count{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.prob .q{font-family:var(--f-math);font-size:clamp(1.6rem,6vw,2.3rem);line-height:1.3;overflow-wrap:anywhere}
+.prob .given{font-family:var(--f-math);font-size:1.2rem;color:var(--muted)}
+.ans{display:flex;gap:8px;flex-wrap:wrap}
+.ans input{flex:1 1 200px;min-width:0;font:1.3rem var(--f-math);padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.keys{display:flex;gap:6px;flex-wrap:wrap}
+.key{font:1.05rem var(--f-math);min-width:40px;padding:6px 10px;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.fb{padding:12px 14px;border-radius:8px;font-weight:700}
+.fb.ok{background:var(--ok-soft);color:var(--ok)}
+.fb.no{background:var(--no-soft);color:var(--no)}
+.fb.info{background:var(--accent-soft);color:var(--ink);font-weight:400}
+.steps{margin:0;padding-left:1.4rem;display:grid;gap:6px}
+.steps li{padding-left:4px}
+.steps li::marker{font-family:var(--f-math);color:var(--muted)}
+.hintbox{border-left:3px solid var(--mark);padding:4px 0 4px 14px;display:grid;gap:6px}
+
+.lesson{display:grid;gap:18px}
+.lesson ul{margin:0;padding-left:1.2rem;display:grid;gap:6px}
+.lesson .ex{display:grid;gap:10px;background:var(--bg);border-radius:10px;padding:16px}
+.lesson .ex .q{font-family:var(--f-math);font-size:1.5rem}
+.callout{display:grid;gap:4px;padding:12px 14px;border-radius:8px;background:var(--no-soft)}
+.callout.talk{background:var(--accent-soft)}
+
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px}
+.score{padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);display:grid;gap:2px}
+.score b{font-family:var(--f-display);font-size:1.6rem;font-variant-numeric:tabular-nums}
+.missed{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.missed li{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:8px;background:var(--paper)}
+.missed .q{font-family:var(--f-math);font-size:1.2rem}
+textarea{width:100%;min-height:80px;font:inherit;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+
+/* progress */
+.tbl{overflow-x:auto}
+.hist{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.hist>li{padding:12px 0;border-bottom:1px solid var(--line);display:grid;gap:6px}
+.hist .h1{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.hist .meta{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+details summary{cursor:pointer;color:var(--accent);font-weight:700;font-size:.9rem}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) 110px 3.5rem;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.mrow .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.mrow .bar span{display:block;height:100%;background:var(--accent)}
+.mrow .pct{font-variant-numeric:tabular-nums;text-align:right;font-size:.9rem}
+
+.guide{display:grid;gap:20px}
+.guide ol,.guide ul{margin:0;padding-left:1.3rem;display:grid;gap:8px}
+.plan{display:grid;gap:0;border-top:1px solid var(--line)}
+.plan>div{display:grid;grid-template-columns:5.5rem 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.plan .min{font-family:var(--f-math);font-variant-numeric:tabular-nums;color:var(--muted)}
+.foot{font-size:.85rem;color:var(--muted)}
+@media (max-width:480px){ h1{font-size:1.6rem} .card{padding:16px} .topics li{grid-template-columns:1.8rem 1fr auto} }
+@media (prefers-reduced-motion:no-preference){ .fb,.hintbox{animation:pop .18s ease-out} @keyframes pop{from{transform:translateY(3px);opacity:.4}to{transform:none;opacity:1}} }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><span class="sq">x</span>Algebra 1 Sessions</div>
+  <nav class="nav" aria-label="Main">
+    <button id="nav-home" data-go="home" aria-current="page">Home</button>
+    <button id="nav-progress" data-go="progress">Progress</button>
+    <button id="nav-guide" data-go="guide">Parent guide</button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <section id="v-home" class="view"></section>
+  <section id="v-session" class="view" hidden></section>
+  <section id="v-progress" class="view" hidden></section>
+  <section id="v-guide" class="view" hidden></section>
+</main>
+
+<script>
+/* ---------- helpers ---------- */
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const nz=(a,b)=>{let n;do{n=ri(a,b)}while(n===0);return n};
+const nzBig=(a,b)=>{let n;do{n=ri(a,b)}while(n===0||n===1||n===-1);return n};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const N=n=>n<0?'−'+(-n):''+n;
+const P=n=>n<0?'('+N(n)+')':N(n);
+const sg=n=>n<0?'−':'+';
+const A=Math.abs;
+function lin(terms){let out='';for(const [c,v] of terms){if(c===0)continue;const a=A(c);const body=v?(a===1?v:a+v):''+a;out=out?out+' '+sg(c)+' '+body:(c<0?'−':'')+body}return out||'0'}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function M(s){let h=esc(s);h=h.replace(/\[\[f:([^|\]]+)\|([^\]]+)\]\]/g,(m,a,b)=>`<span class="frac"><span>${a}</span><span>${b}</span></span>`);
+  return h.replace(/(^|[^A-Za-z&;#])([xy])(?![A-Za-z])/g,'$1<i class="v">$2</i>')}
+const plain=s=>String(s).replace(/\[\[f:([^|\]]+)\|([^\]]+)\]\]/g,'$1/$2');
+const $=id=>document.getElementById(id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+/* ---------- topics & lessons ---------- */
+const TOPICS=[
+ {id:'order',name:'Order of operations',idea:'When an expression has more than one operation, everyone does them in the same order so everyone gets the same answer.',
+  rules:['Parentheses (and other grouping) first','Exponents next','Multiply and divide, left to right, whichever comes first','Add and subtract, left to right, whichever comes first'],
+  memo:'PEMDAS helps, but M and D are a tie, and so are A and S. Ties go left to right.',
+  ex:{q:'20 − 2 × (3 + 1)²',steps:['Parentheses: 3 + 1 = 4, which leaves 20 − 2 × 4²','Exponent: 4² = 16, which leaves 20 − 2 × 16','Multiply: 2 × 16 = 32, which leaves 20 − 32','Subtract: 20 − 32 = −12']},
+  watch:'Working straight left to right. In 8 − 2 × 3 the answer is 2, not 18.',
+  talk:'Point at the problem and ask: “Which operation happens first here, and why?”'},
+ {id:'integers',name:'Negative numbers',idea:'Negative numbers sit to the left of zero on the number line. Four rules cover almost every situation.',
+  rules:['Different signs, adding: subtract the sizes, keep the sign of the bigger one','Two negatives, adding: add the sizes, the answer is negative','Subtracting is adding the opposite: 5 − (−3) = 5 + 3','Multiplying or dividing: same signs → positive, different signs → negative'],
+  memo:'Picture a number line. Adding a positive moves right; adding a negative moves left.',
+  ex:{q:'−8 − (−5) + 2 × (−3)',steps:['Multiply first: 2 × (−3) = −6, which leaves −8 − (−5) + (−6)','Subtracting −5 is adding 5: −8 + 5 + (−6)','−8 + 5 = −3','−3 + (−6) = −9']},
+  watch:'−3 − 4 is −7 (you move further left). It is not 1 or −1.',
+  talk:'Ask: “Are we moving left or right on the number line?”'},
+ {id:'evaluate',name:'Evaluating expressions',idea:'A variable is a placeholder for a number. To evaluate, swap the letter for its number, then do the arithmetic.',
+  rules:['Put the number in parentheses when you substitute, especially a negative','A number next to a letter means multiply: 3x means 3 × x','Then follow the order of operations'],
+  memo:'Substitute, then simplify. Parentheses first, every time.',
+  ex:{q:'2x² − 3x when x = −2',steps:['Substitute: 2(−2)² − 3(−2)','Exponent: (−2)² = 4, which leaves 2(4) − 3(−2)','Multiply: 8 − (−6)','Subtracting a negative: 8 + 6 = 14']},
+  watch:'Writing −2² instead of (−2)². With parentheses, (−2)² = 4.',
+  talk:'Ask him to write the substituted version before doing any math.'},
+ {id:'like',name:'Combining like terms',idea:'Like terms have exactly the same variable part. You add them the way you would add 3 apples and 2 apples.',
+  rules:['3x and −5x are like terms. 3x and 3 are not. x and y are not.','Add or subtract the numbers in front (coefficients); the variable stays the same','Each term takes the sign in front of it','x on its own means 1x'],
+  memo:'Circle the x-terms, box the plain numbers, then combine each group.',
+  ex:{q:'4x + 7 − x − 2',steps:['The x-terms are 4x and −x','4x − x = 3x','The plain numbers are 7 and −2, and 7 − 2 = 5','Answer: 3x + 5']},
+  watch:'Combining unlike terms. 3x + 5 is finished; it is not 8x.',
+  talk:'Have him circle and box the terms on paper before writing anything.'},
+ {id:'distribute',name:'The distributive property',idea:'A number outside parentheses multiplies every term inside.',
+  rules:['a(b + c) = ab + ac','Multiply every term inside, not just the first','A negative outside flips every sign inside','Combine like terms after you distribute'],
+  memo:'Draw an arrow from the outside number to each term inside.',
+  ex:{q:'−3(x − 4) + 2x',steps:['−3 × x = −3x','−3 × (−4) = +12, which leaves −3x + 12 + 2x','Combine the x-terms: −3x + 2x = −x','Answer: −x + 12']},
+  watch:'Multiplying only the first term. 2(x + 5) is 2x + 10, not 2x + 5.',
+  talk:'Ask: “How many arrows do you need to draw?”'},
+ {id:'onestep',name:'One-step equations',idea:'An equation is a balance. Whatever you do to one side, you do to the other. Undo whatever is attached to x.',
+  rules:['+ is undone by −, and − is undone by +','× is undone by ÷, and ÷ is undone by ×','Check by putting your answer back into the original equation'],
+  memo:'Ask what is happening to x, then do the opposite to both sides.',
+  ex:{q:'x − 7 = −3',steps:['7 is being subtracted from x, so add 7 to both sides','x − 7 + 7 = −3 + 7','x = 4','Check: 4 − 7 = −3 ✓']},
+  watch:'Doing the same operation instead of the opposite. For x + 5 = 12, subtract 5; don’t add it.',
+  talk:'Ask: “What is being done to x? What undoes that?”'},
+ {id:'twostep',name:'Two-step equations',idea:'Two operations are attached to x. Undo them in reverse order: addition or subtraction first, then multiplication or division.',
+  rules:['Step 1: undo + or − on both sides','Step 2: undo × or ÷ on both sides','With parentheses, you can divide first or distribute first','Check your answer in the original equation'],
+  memo:'Getting dressed is socks, then shoes. Undoing it is shoes, then socks.',
+  ex:{q:'3x + 5 = −10',steps:['Subtract 5 from both sides: 3x = −15','Divide both sides by 3: x = −5','Check: 3(−5) + 5 = −15 + 5 = −10 ✓']},
+  watch:'Dividing first without dividing everything. In 3x + 5 = −10, dividing only the 3x by 3 leaves the 5 behind.',
+  talk:'Ask him to say the two steps out loud before he writes them.'}
+];
+TOPICS.forEach((t,i)=>t.idx=i);
+const T=Object.fromEntries(TOPICS.map(t=>[t.id,t]));
+
+/* ---------- problem generators ---------- */
+const GEN={
+ order(){const f=ri(0,3);let a,b,c,d,q,ans,steps;
+  if(f===0){a=ri(2,15);b=ri(2,9);c=ri(2,9);q=`${a} + ${b} × ${c}`;ans=a+b*c;steps=[`Multiplication comes before addition, so start with ${b} × ${c}.`,`${b} × ${c} = ${b*c}, which leaves ${a} + ${b*c}.`,`${a} + ${b*c} = ${ans}`]}
+  if(f===1){a=ri(1,9);b=ri(1,9);c=ri(2,6);d=ri(1,20);const s=a+b;q=`(${a} + ${b}) × ${c} − ${d}`;ans=s*c-d;steps=[`Parentheses first: ${a} + ${b} = ${s}, which leaves ${s} × ${c} − ${d}.`,`Multiply next: ${s} × ${c} = ${s*c}, which leaves ${s*c} − ${d}.`,`${s*c} − ${d} = ${N(ans)}`]}
+  if(f===2){a=ri(3,9);b=ri(2,6);c=ri(2,6);q=`${a}² − ${b} × ${c}`;ans=a*a-b*c;steps=[`Exponent first: ${a}² means ${a} × ${a} = ${a*a}.`,`Multiply next: ${b} × ${c} = ${b*c}, which leaves ${a*a} − ${b*c}.`,`${a*a} − ${b*c} = ${N(ans)}`]}
+  if(f===3){c=ri(2,6);const k=ri(2,8);b=c*k;d=ri(2,5);a=k*d+ri(1,12);q=`${a} − ${b} ÷ ${c} × ${d}`;ans=a-k*d;steps=[`Division and multiplication are a tie, so go left to right. ${b} ÷ ${c} comes first: ${k}.`,`Now ${k} × ${d} = ${k*d}, which leaves ${a} − ${k*d}.`,`${a} − ${k*d} = ${ans}`]}
+  return {prompt:'Simplify',q,type:'num',ans,ansShow:N(ans),steps}},
+ integers(){const f=ri(0,3);let a,b,q,ans,steps;
+  if(f===0){do{a=nz(-15,15);b=nz(-15,15)}while(a>0&&b>0);q=`${N(a)} + ${P(b)}`;ans=a+b;
+   if(a<0&&b<0)steps=[`Both numbers are negative, so add their sizes: ${-a} + ${-b} = ${-a-b}.`,`The answer stays negative: ${N(ans)}`];
+   else{const big=A(a)>=A(b)?a:b;steps=[`The signs are different, so subtract the sizes: ${Math.max(A(a),A(b))} − ${Math.min(A(a),A(b))} = ${A(ans)}.`,`Keep the sign of the number with the bigger size (${N(big)}): ${N(ans)}`]}}
+  if(f===1){a=nz(-12,12);b=nz(-12,12);if(a>0&&b>0)b=-b;q=`${N(a)} − ${P(b)}`;ans=a-b;
+   steps=b<0?[`Subtracting a negative is the same as adding: ${N(a)} + ${-b}.`,`${N(a)} + ${-b} = ${N(ans)}`]:[`Subtracting is adding the opposite: ${N(a)} + (${N(-b)}).`,`${N(a)} + (${N(-b)}) = ${N(ans)}`]}
+  if(f===2){a=nzBig(-9,9);b=nzBig(-9,9);if(a>0&&b>0)a=-a;q=`${N(a)} × ${P(b)}`;ans=a*b;steps=[(a<0)===(b<0)?'The signs are the same, so the answer is positive.':'The signs are different, so the answer is negative.',`${A(a)} × ${A(b)} = ${A(ans)}, so the answer is ${N(ans)}.`]}
+  if(f===3){b=nzBig(-9,9);const k=nzBig(-9,9);a=b*k;if(a>0&&b>0)b=-b;ans=a/b;q=`${N(a)} ÷ ${P(b)}`;steps=[(a<0)===(b<0)?'The signs are the same, so the answer is positive.':'The signs are different, so the answer is negative.',`${A(a)} ÷ ${A(b)} = ${A(ans)}, so the answer is ${N(ans)}.`]}
+  return {prompt:'Simplify',q,type:'num',ans,ansShow:N(ans),steps}},
+ evaluate(){const f=ri(0,3);let a,b,x,y,q,given,ans,steps;
+  if(f===0){a=nzBig(-6,7);b=nz(-10,10);x=nz(-5,6);const ax=a*x;ans=ax+b;q=lin([[a,'x'],[b,'']]);given=`when x = ${N(x)}`;
+   steps=[`Replace x with (${N(x)}): ${N(a)}(${N(x)}) ${sg(b)} ${A(b)}`,`Multiply: ${N(a)} × ${P(x)} = ${N(ax)}, which leaves ${N(ax)} ${sg(b)} ${A(b)}.`,`${N(ax)} ${sg(b)} ${A(b)} = ${N(ans)}`]}
+  if(f===1){x=nz(-6,6);b=nz(-12,12);ans=x*x+b;q=lin([[1,'x²'],[b,'']]);given=`when x = ${N(x)}`;
+   steps=[`Replace x with (${N(x)}): (${N(x)})² ${sg(b)} ${A(b)}`,`(${N(x)})² = ${N(x)} × ${N(x)} = ${x*x}${x<0?'. A negative times a negative is positive.':'.'}`,`${x*x} ${sg(b)} ${A(b)} = ${N(ans)}`]}
+  if(f===2){a=ri(2,6);b=ri(1,9);x=nz(-5,9);ans=a*(x-b);q=`${a}(x − ${b})`;given=`when x = ${N(x)}`;
+   steps=[`Replace x with (${N(x)}): ${a}(${N(x)} − ${b})`,`Parentheses first: ${N(x)} − ${b} = ${N(x-b)}`,`${a} × ${P(x-b)} = ${N(ans)}`]}
+  if(f===3){a=nzBig(-5,6);b=nzBig(-5,6);x=nz(-4,5);y=nz(-4,5);ans=a*x+b*y;q=lin([[a,'x'],[b,'y']]);given=`when x = ${N(x)} and y = ${N(y)}`;
+   steps=[`Replace x with (${N(x)}) and y with (${N(y)}): ${N(a)}(${N(x)}) ${sg(b)} ${A(b)}(${N(y)})`,`${N(a)} × ${P(x)} = ${N(a*x)} and ${N(b)} × ${P(y)} = ${N(b*y)}`,`${N(a*x)} + ${P(b*y)} = ${N(ans)}`]}
+  return {prompt:'Evaluate',q,given,type:'num',ans,ansShow:N(ans),steps}},
+ like(){const f=ri(0,1);let q,at,steps;
+  if(f===0){let a,c;do{a=nz(-9,9);c=nz(-9,9)}while(a+c===0);const b=nz(-12,12),d=nz(-12,12);
+   q=lin(pick([[[a,'x'],[b,''],[c,'x'],[d,'']],[[a,'x'],[b,''],[d,''],[c,'x']],[[b,''],[a,'x'],[d,''],[c,'x']]]));at=[[a+c,'x'],[b+d,'']];
+   steps=[`Find the x-terms: ${lin([[a,'x']])} and ${lin([[c,'x']])}. Together they make ${lin([[a+c,'x']])}.`,`Find the plain numbers: ${N(b)} and ${N(d)}. Together they make ${N(b+d)}.`,`Put it together: ${lin(at)}`]}
+  else{let a,c,b,d;do{a=nz(-8,8);c=nz(-8,8);b=nz(-8,8);d=nz(-8,8)}while(a+c===0||b+d===0);
+   q=lin(pick([[[a,'x'],[b,'y'],[c,'x'],[d,'y']],[[a,'x'],[b,'y'],[d,'y'],[c,'x']]]));at=[[a+c,'x'],[b+d,'y']];
+   steps=[`The x-terms are ${lin([[a,'x']])} and ${lin([[c,'x']])}. Together: ${lin([[a+c,'x']])}.`,`The y-terms are ${lin([[b,'y']])} and ${lin([[d,'y']])}. Together: ${lin([[b+d,'y']])}.`,`Put it together: ${lin(at)}`]}
+  return {prompt:'Simplify',q,type:'expr',ansExpr:lin(at),ansShow:lin(at),steps}},
+ distribute(){const f=ri(0,3);let q,at,steps;
+  if(f===0){const a=ri(2,9),b=nz(-9,9);q=`${a}(${lin([[1,'x'],[b,'']])})`;at=[[a,'x'],[a*b,'']];
+   steps=[`Multiply ${a} by each term inside the parentheses.`,`${a} × x = ${a}x and ${a} × ${P(b)} = ${N(a*b)}`,`Answer: ${lin(at)}`]}
+  if(f===1){const a=-ri(2,9),b=ri(1,9);q=`${N(a)}(x − ${b})`;at=[[a,'x'],[-a*b,'']];
+   steps=[`The ${N(a)} multiplies both terms, and its negative sign flips each sign inside.`,`${N(a)} × x = ${N(a)}x and ${N(a)} × (−${b}) = ${N(-a*b)}`,`Answer: ${lin(at)}`]}
+  if(f===2){const a=nzBig(-5,6),b=ri(2,5),c=nz(-8,8),d=nz(-15,15);q=`${N(a)}(${lin([[b,'x'],[c,'']])}) ${sg(d)} ${A(d)}`;at=[[a*b,'x'],[a*c+d,'']];
+   steps=[`Distribute: ${N(a)} × ${b}x = ${N(a*b)}x and ${N(a)} × ${P(c)} = ${N(a*c)}.`,`Now you have ${lin([[a*b,'x'],[a*c,''],[d,'']])}.`,`Combine the plain numbers: ${N(a*c)} ${sg(d)} ${A(d)} = ${N(a*c+d)}. Answer: ${lin(at)}`]}
+  if(f===3){const a=ri(2,7),b=nz(-8,8);let c;do{c=nz(-6,6)}while(a+c===0);q=`${a}(${lin([[1,'x'],[b,'']])}) ${sg(c)} ${A(c)===1?'':A(c)}x`;at=[[a+c,'x'],[a*b,'']];
+   steps=[`Distribute: ${a} × x = ${a}x and ${a} × ${P(b)} = ${N(a*b)}.`,`Now you have ${lin([[a,'x'],[a*b,''],[c,'x']])}.`,`Combine the x-terms: ${a}x ${sg(c)} ${A(c)}x = ${lin([[a+c,'x']])}. Answer: ${lin(at)}`]}
+  return {prompt:'Simplify',q,type:'expr',ansExpr:lin(at),ansShow:lin(at),steps}},
+ onestep(){const f=ri(0,3);let x=nz(-12,12),a,b,q,steps;
+  if(f===0){a=ri(1,15);b=x+a;q=`x + ${a} = ${N(b)}`;steps=[`${a} is added to x. Undo it by subtracting ${a} from both sides.`,`x = ${N(b)} − ${a}`,`x = ${N(x)}. Check: ${N(x)} + ${a} = ${N(b)} ✓`]}
+  if(f===1){a=ri(1,15);b=x-a;q=`x − ${a} = ${N(b)}`;steps=[`${a} is subtracted from x. Undo it by adding ${a} to both sides.`,`x = ${N(b)} + ${a}`,`x = ${N(x)}. Check: ${N(x)} − ${a} = ${N(b)} ✓`]}
+  if(f===2){a=nzBig(-9,9);b=a*x;q=`${N(a)}x = ${N(b)}`;steps=[`x is multiplied by ${N(a)}. Undo it by dividing both sides by ${N(a)}.`,`x = ${N(b)} ÷ ${P(a)}`,`x = ${N(x)}. Check: ${N(a)} × ${P(x)} = ${N(b)} ✓`]}
+  if(f===3){a=ri(2,9);b=nz(-9,9);x=a*b;q=`[[f:x|${a}]] = ${N(b)}`;steps=[`x is divided by ${a}. Undo it by multiplying both sides by ${a}.`,`x = ${N(b)} × ${a}`,`x = ${N(x)}. Check: ${N(x)} ÷ ${a} = ${N(b)} ✓`]}
+  return {prompt:'Solve for x',q,type:'eq',ans:x,ansShow:`x = ${N(x)}`,steps}},
+ twostep(){const f=ri(0,3);let x=nz(-10,10),a,b,c,q,steps;
+  if(f===0){a=nzBig(-9,9);b=nz(-15,15);c=a*x+b;q=`${lin([[a,'x'],[b,'']])} = ${N(c)}`;
+   steps=[`Undo the ${b<0?'subtraction':'addition'} first: ${b<0?`add ${-b} to`:`subtract ${b} from`} both sides. That leaves ${N(a)}x = ${N(c-b)}.`,`Now undo the multiplication: divide both sides by ${N(a)}. x = ${N(c-b)} ÷ ${P(a)}`,`x = ${N(x)}. Check: ${N(a)}(${N(x)}) ${sg(b)} ${A(b)} = ${N(c)} ✓`]}
+  if(f===1){a=ri(2,6);b=nz(-10,10);const k=nz(-8,8);x=a*k;c=k+b;q=`[[f:x|${a}]] ${sg(b)} ${A(b)} = ${N(c)}`;
+   steps=[`Undo the ${b<0?'subtraction':'addition'} first: ${b<0?`add ${-b} to`:`subtract ${b} from`} both sides. That leaves [[f:x|${a}]] = ${N(k)}.`,`Now undo the division: multiply both sides by ${a}. x = ${N(k)} × ${a}`,`x = ${N(x)}. Check: ${N(x)} ÷ ${a} ${sg(b)} ${A(b)} = ${N(c)} ✓`]}
+  if(f===2){a=ri(2,6);b=nz(-9,9);c=a*(x+b);q=`${a}(${lin([[1,'x'],[b,'']])}) = ${N(c)}`;
+   steps=[`Divide both sides by ${a} first. That leaves ${lin([[1,'x'],[b,'']])} = ${N(x+b)}.`,`Undo the ${b<0?`− ${-b}: add ${-b} to`:`+ ${b}: subtract ${b} from`} both sides. x = ${N(x)}`,`Check: ${a}(${N(x)} ${sg(b)} ${A(b)}) = ${a}(${N(x+b)}) = ${N(c)} ✓`]}
+  if(f===3){b=ri(5,20);a=ri(2,6);c=b-a*x;q=`${b} − ${a}x = ${N(c)}`;
+   steps=[`Subtract ${b} from both sides. That leaves −${a}x = ${N(c-b)}.`,`Divide both sides by −${a}: x = ${N(c-b)} ÷ (−${a})`,`x = ${N(x)}. Check: ${b} − ${a}(${N(x)}) = ${N(c)} ✓`]}
+  return {prompt:'Solve for x',q,type:'eq',ans:x,ansShow:`x = ${N(x)}`,steps}}
+};
+function gen(topic){const p=GEN[topic]();p.topic=topic;return p}
+function genSet(topic,n){const out=[],seen=new Set();let g=0;while(out.length<n&&g<60){g++;const p=gen(topic);if(seen.has(p.q))continue;seen.add(p.q);out.push(p)}return out}
+
+/* ---------- answer checking ---------- */
+function norm(s){return String(s).toLowerCase().replace(/[−–—]/g,'-').replace(/[×·]/g,'*').replace(/÷/g,'/').replace(/²/g,'^2').replace(/,/g,'').trim()}
+function parse(src){const s=norm(src);const toks=[];let i=0;
+ while(i<s.length){const c=s[i];if(/\s/.test(c)){i++;continue}
+  if(/[0-9.]/.test(c)){let j=i;while(j<s.length&&/[0-9.]/.test(s[j]))j++;const v=parseFloat(s.slice(i,j));if(isNaN(v))throw 0;toks.push({t:'n',v});i=j;continue}
+  if(c==='x'||c==='y'){toks.push({t:'v',v:c});i++;continue}
+  if('+-*/^()'.includes(c)){toks.push({t:c});i++;continue}
+  throw 0}
+ let p=0;const pk=()=>toks[p];
+ function expr(){let n=term();while(pk()&&(pk().t==='+'||pk().t==='-')){const o=toks[p++].t,l=n,r=term();n=o==='+'?e=>l(e)+r(e):e=>l(e)-r(e)}return n}
+ function term(){let n=unary();for(;;){const k=pk();if(!k)break;
+   if(k.t==='*'||k.t==='/'){p++;const l=n,r=unary();n=k.t==='*'?e=>l(e)*r(e):e=>l(e)/r(e)}
+   else if(k.t==='n'||k.t==='v'||k.t==='('){const l=n,r=power();n=e=>l(e)*r(e)}else break}return n}
+ function unary(){if(pk()&&pk().t==='-'){p++;const u=unary();return e=>-u(e)}if(pk()&&pk().t==='+'){p++;return unary()}return power()}
+ function power(){const b=primary();if(pk()&&pk().t==='^'){p++;const ex=unary();return e=>Math.pow(b(e),ex(e))}return b}
+ function primary(){const k=toks[p++];if(!k)throw 0;if(k.t==='n')return()=>k.v;if(k.t==='v')return e=>e[k.v];
+   if(k.t==='('){const n=expr();if(!pk()||pk().t!==')')throw 0;p++;return n}throw 0}
+ const f=expr();if(p!==toks.length)throw 0;
+ return {f,vars:new Set(toks.filter(t=>t.t==='v').map(t=>t.v))}}
+function simplified(s){s=norm(s).replace(/\s/g,'');if(s.includes('('))return false;
+ const terms=s.replace(/(?!^)[+-]/g,m=>'|'+m).split('|');const seen=new Set();
+ for(const t of terms){const k=(t.match(/[xy](\^\d+)?/g)||[]).sort().join('');if(seen.has(k))return false;seen.add(k)}return true}
+function check(prob,input){
+ if(!String(input).trim())return {ok:false,soft:true,msg:'Type an answer first.'};
+ let s=String(input);if(prob.type==='eq')s=s.replace(/^\s*[xy]\s*=\s*/i,'');
+ let U;try{U=parse(s)}catch(e){return {ok:false,soft:true,msg:'That answer couldn’t be read. Try something like 7, −3, or 4x + 2.'}}
+ if(prob.type!=='expr'){if(U.vars.size)return {ok:false,soft:true,msg:'The answer should be a single number.'};return {ok:Math.abs(U.f({})-prob.ans)<1e-9}}
+ const K=parse(prob.ansExpr);
+ for(const pt of [{x:1.37,y:-2.11},{x:-3.2,y:.73},{x:5.5,y:4.1}]){const d=U.f(pt)-K.f(pt);if(!(Math.abs(d)<1e-6))return {ok:false}}
+ if(!simplified(s))return {ok:false,soft:true,msg:'That’s equal to the right answer, but it isn’t fully simplified yet. Clear the parentheses and combine like terms.'};
+ return {ok:true}}
+
+/* ---------- storage (this device; backup/restore as a file) ---------- */
+const store={mode:'local',ok:true,list:[]};
+const LS='alg1-attempts';
+const memFallback={v:'[]'};
+function lsRead(){try{return JSON.parse(localStorage.getItem(LS)||'[]')}catch(e){store.ok=false;try{return JSON.parse(memFallback.v)}catch(_){return []}}}
+function lsWrite(a){const s=JSON.stringify(a);memFallback.v=s;try{localStorage.setItem(LS,s);store.ok=true}catch(e){store.ok=false}}
+function load(){store.list=lsRead().sort((a,b)=>b.ts-a.ts)}
+function initStore(){load();
+ try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+ refresh()}
+async function saveAttempt(rec){const a=lsRead();a.push(rec);lsWrite(a);load();refresh()}
+async function saveNote(id,note){const a=lsRead();const r=a.find(x=>x.id===id);if(r){r.note=note;lsWrite(a);load();return store.ok}return false}
+async function removeAttempt(id){lsWrite(lsRead().filter(x=>x.id!==id));load();refresh()}
+function exportData(){
+ const blob=new Blob([JSON.stringify({app:'algebra1-sessions',version:1,exported:new Date().toISOString(),attempts:lsRead()},null,1)],{type:'application/json'});
+ const name='algebra-progress-'+new Date().toISOString().slice(0,10)+'.json';
+ const file=new File([blob],name,{type:'application/json'});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){return navigator.share({files:[file],title:'Algebra progress backup'}).catch(()=>{})}
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+function importData(file,msgEl){const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);const inc=Array.isArray(d)?d:d.attempts;if(!Array.isArray(inc))throw 0;
+  const cur=lsRead();const ids=new Set(cur.map(x=>x.id));let n=0;for(const r of inc){if(r&&r.id&&r.ts&&!ids.has(r.id)){cur.push(r);ids.add(r.id);n++}}
+  lsWrite(cur);load();msgEl.textContent=n?`Added ${n} record${n>1?'s':''} from the backup.`:'Nothing new in that file; everything was already here.';renderProgress();$('p-msg').textContent=msgEl.textContent}
+ catch(e){msgEl.textContent='That file isn’t an Algebra progress backup.'}};fr.readAsText(file)}
+function summaryText(){const lines=['Algebra 1 progress, '+new Date().toLocaleDateString()];
+ for(const t of TOPICS){const m=mastery(t.id);lines.push(`${t.idx+1}. ${t.name}: ${status(m).l}${m==null?'':' ('+Math.round(m*100)+'%)'}`)}
+ lines.push('','Recent:');for(const r of store.list.slice(0,8)){const P=r.parts||{};const sc=P.check?`check ${P.check.c}/${P.check.t}`:P.diag?`${P.diag.c}/${P.diag.t}`:P.practice?`practice ${P.practice.c}/${P.practice.t}`:'';
+  lines.push(`- ${fmtDate(r.ts)}: ${r.kind==='diagnostic'?'Mixed check-in':(T[r.topic]?T[r.topic].name:'')+' '+(KIND[r.kind]||'').toLowerCase()} ${sc}${r.note?' · note: '+r.note:''}`)}
+ return lines.join('\n')}
+
+/* ---------- mastery ---------- */
+function evidence(tid){const ev=[];for(const r of store.list){
+  if(r.topic===tid&&r.parts&&r.parts.check)ev.push({c:r.parts.check.c,t:r.parts.check.t,ts:r.ts});
+  if(r.kind==='diagnostic'&&r.perTopic&&r.perTopic[tid])ev.push({c:r.perTopic[tid].c,t:r.perTopic[tid].t,ts:r.ts});
+  if(ev.length>=2)break}return ev}
+function mastery(tid){const ev=evidence(tid);if(!ev.length)return null;return ev.reduce((s,e)=>s+e.c/e.t,0)/ev.length}
+function status(m){if(m==null)return {l:'Not started',c:'s0'};if(m<.6)return {l:'Learning',c:'s1'};if(m<.85)return {l:'Getting there',c:'s2'};return {l:'Solid',c:'s3'}}
+function recommend(){if(!store.list.length)return null;for(const t of TOPICS){const m=mastery(t.id);if(m==null||m<.85)return t}return 'all'}
+
+function tutorBlock(){return document.createDocumentFragment()}
+
+/* ---------- navigation ---------- */
+const S={view:'home',sess:null,timer:null};
+function go(v){S.view=v;for(const k of ['home','session','progress','guide'])$('v-'+k).hidden=k!==v;
+ document.querySelectorAll('.nav button').forEach(b=>b.getAttribute('data-go')===v||(v==='session'&&b.dataset.go==='home')?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
+ if(v==='home')renderHome();if(v==='progress')renderProgress();if(v==='guide')renderGuide();window.scrollTo(0,0)}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(S.view==='session'&&S.sess&&S.sess.stage<S.sess.stages.length-1){if(!b.dataset.sure){b.dataset.sure='1';const o=b.textContent;b.textContent='Leave session?';setTimeout(()=>{b.textContent=o;delete b.dataset.sure},2500);return}delete b.dataset.sure}endTimer();go(b.dataset.go)});
+function refresh(){if(S.view==='home')renderHome();if(S.view==='progress')renderProgress()}
+const fmtDate=ts=>new Date(ts).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+const saveLine=()=>store.ok?'Works offline. Progress is saved on this device; use Backup on the Progress tab to move it or keep a copy.':'This browser isn’t letting the app save, so progress will be lost when it closes. Add it to the home screen or open it in Safari or Chrome instead.';
+
+/* ---------- home ---------- */
+function renderHome(){
+ const rec=recommend();const v=$('v-home');
+ let next;
+ if(rec===null){next=`<div class="card next">
+   <p class="eyebrow">Start here</p>
+   <p class="big">Take the 10-minute check-in</p>
+   <p class="muted">Fourteen questions, two from each topic below. It shows where he’s comfortable and where to begin, so the first session isn’t a guess.</p>
+   <div class="row"><button class="btn" id="h-diag">Start the check-in</button><button class="btn sec" id="h-first">Skip it and start with topic 1</button></div></div>`}
+ else if(rec==='all'){next=`<div class="card next"><p class="eyebrow">Next up</p><p class="big">Every topic is solid</p>
+   <p class="muted">Run the mixed check-in to keep it fresh, or pick any topic for extra practice.</p>
+   <div class="row"><button class="btn" id="h-diag">Mixed check-in</button></div></div>`}
+ else{const m=mastery(rec.id),st=status(m);next=`<div class="card next"><p class="eyebrow">Next session · topic ${rec.idx+1} of 7</p>
+   <p class="big">${esc(rec.name)}</p>
+   <p><span class="chip ${st.c}">${st.l}</span> <span class="muted">${m==null?'Not tried yet.':'Recent check score: '+Math.round(m*100)+'%'}</span></p>
+   <p class="muted">About 25 minutes: warm-up, a short lesson, guided practice with hints, then a 5-question check.</p>
+   <div class="row"><button class="btn" data-act="session" data-t="${rec.id}">Start session</button><button class="btn sec" data-act="lesson" data-t="${rec.id}">Just the lesson</button></div></div>`}
+ const rows=TOPICS.map((t,i)=>{const m=mastery(t.id),st=status(m);return `<li>
+   <span class="num">${i+1}</span>
+   <div class="name">${esc(t.name)}<div class="bar"><span style="width:${m==null?0:Math.round(m*100)}%"></span></div></div>
+   <span class="chip ${st.c}">${st.l}</span>
+   <div class="sub"><button class="btn ghost sm" data-act="session" data-t="${t.id}">Full session</button><button class="btn ghost sm" data-act="lesson" data-t="${t.id}">Lesson</button><button class="btn ghost sm" data-act="practice" data-t="${t.id}">Practice</button><button class="btn ghost sm" data-act="quiz" data-t="${t.id}">Quiz</button></div></li>`}).join('');
+ v.innerHTML=`<div style="display:grid;gap:8px"><h1>Algebra, a little at a time</h1><p class="muted">Short sessions for the two of you: learn one idea, practice it with hints, then check it. Scores and missed problems are logged so you can see what to review.</p></div>
+  ${next}
+  <div style="display:grid;gap:12px"><div class="row" style="justify-content:space-between"><h2>The seven topics</h2><button class="btn sec sm" id="h-diag2">Mixed check-in</button></div>
+  <p class="muted">These follow the usual order of an Algebra 1 course’s opening weeks. Each one leans on the ones above it.</p>
+  <ul class="topics">${rows}</ul></div>
+  <p class="foot">${saveLine()}</p>`;
+ v.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>startSession(b.dataset.act,b.dataset.t));
+ const d=$('h-diag');if(d)d.onclick=()=>startSession('diagnostic');
+ $('h-diag2').onclick=()=>startSession('diagnostic');
+ const f=$('h-first');if(f)f.onclick=()=>startSession('session','order');
+}
+
+/* ---------- sessions ---------- */
+const STAGE_NAMES={warmup:'Warm-up',learn:'Learn',practice:'Guided practice',check:'Check',diag:'Check-in',wrap:'Wrap-up'};
+function startSession(kind,topic){
+ const stages={session:['warmup','learn','practice','check','wrap'],lesson:['learn'],practice:['practice','wrap'],quiz:['check','wrap'],diagnostic:['diag','wrap']}[kind];
+ S.sess={id:uid(),kind,topic:topic||null,stages,stage:0,res:{},start:Date.now(),saved:false};
+ endTimer();S.timer=setInterval(()=>{const el=$('s-timer');if(el)el.textContent=mins()},20000);
+ go('session');renderStage()}
+function endTimer(){if(S.timer){clearInterval(S.timer);S.timer=null}}
+const mins=()=>{const m=Math.max(1,Math.round((Date.now()-S.sess.start)/60000));return m+' min'};
+function nextStage(){S.sess.stage++;renderStage();window.scrollTo(0,0)}
+function renderStage(){
+ const s=S.sess,v=$('v-session'),key=s.stages[s.stage];
+ const title=s.kind==='diagnostic'?'Mixed check-in':T[s.topic].name;
+ v.innerHTML=`<div class="shead"><div class="row"><div><p class="eyebrow">${s.kind==='diagnostic'?'All seven topics':'Topic '+(T[s.topic].idx+1)}</p><h1>${esc(title)}</h1></div><span class="timer" id="s-timer">${mins()}</span></div>
+  ${s.stages.length>1?`<div class="stages">${s.stages.map((k,i)=>`<span class="stage ${i<s.stage?'done':i===s.stage?'on':''}">${STAGE_NAMES[k]}</span>`).join('')}</div>`:''}</div>
+  <div id="s-body"></div>`;
+ const body=$('s-body');
+ if(key==='learn')return renderLesson(body);
+ if(key==='warmup'){const prev=TOPICS.slice(0,T[s.topic].idx);const pool=prev.length?prev:[T[s.topic]];
+  const probs=[0,1,2].map(()=>gen(pick(pool).id));
+  body.append(intro(prev.length?'Three quick problems from earlier topics to get warmed up. Hints are available.':'Three quick problems to get warmed up. Hints are available.'));
+  return runner(body,probs,'guided',r=>{s.res.warmup=r;nextStage()})}
+ if(key==='practice'){body.append(intro('Five problems. Use “Show a hint” whenever he’s stuck; a wrong answer also reveals the next step.'));
+  return runner(body,genSet(s.topic,5),'guided',r=>{s.res.practice=r;nextStage()})}
+ if(key==='check'){body.append(intro('Five problems, no hints, one try each. This score is what the progress page tracks.'));
+  return runner(body,genSet(s.topic,5),'test',r=>{s.res.check=r;nextStage()})}
+ if(key==='diag'){const probs=[];TOPICS.forEach(t=>probs.push(...genSet(t.id,2)));
+  body.append(intro('Fourteen problems, two per topic, from easiest topic to hardest. No hints. It’s fine to skip anything he hasn’t seen yet.'));
+  return runner(body,probs,'test',r=>{s.res.diag=r;nextStage()},true)}
+ if(key==='wrap')return renderWrap(body)}
+function intro(t){const p=document.createElement('p');p.className='muted';p.textContent=t;p.style.marginBottom='12px';return p}
+
+function renderLesson(body){
+ const s=S.sess,t=T[s.topic];
+ body.innerHTML=`<div class="card lesson">
+  <div style="display:grid;gap:6px"><p class="eyebrow">The big idea</p><p style="font-size:1.1rem">${M(t.idea)}</p></div>
+  <div style="display:grid;gap:6px"><p class="eyebrow">Rules</p><ul>${t.rules.map(r=>`<li>${M(r)}</li>`).join('')}</ul><p class="muted">${M(t.memo)}</p></div>
+  <div class="ex"><p class="eyebrow">Worked example</p><p class="q">${M(t.ex.q)}</p><ol class="steps" id="l-steps"></ol>
+   <div class="row"><button class="btn sec sm" id="l-next">Show step 1</button></div></div>
+  <div class="callout"><p class="eyebrow">Watch out</p><p>${M(t.watch)}</p></div>
+  <div class="callout talk"><p class="eyebrow">Talk it through</p><p>${M(t.talk)}</p></div>
+ </div>
+ <div class="row" style="margin-top:16px">${s.kind==='lesson'?`<button class="btn" id="l-go">Practice this topic</button><button class="btn sec" id="l-home">Back to home</button>`:`<button class="btn" id="l-go">Start guided practice</button>`}</div>`;
+ let n=0;const ol=$('l-steps'),nb=$('l-next');
+ nb.onclick=()=>{const li=document.createElement('li');li.innerHTML=M(t.ex.steps[n]);ol.append(li);n++;
+  if(n>=t.ex.steps.length){nb.hidden=true}else nb.textContent='Show step '+(n+1)};
+ $('l-go').onclick=()=>{if(s.kind==='lesson')startSession('practice',s.topic);else nextStage()};
+ const h=$('l-home');if(h)h.onclick=()=>{endTimer();go('home')}}
+
+function runner(host,probs,mode,done,allowSkip){
+ const results=[];let i=0;
+ const card=document.createElement('div');card.className='card prob';host.append(card);
+ function show(){
+  const p=probs[i];let tries=0,hints=0,finished=false;
+  card.innerHTML=`<div class="count"><span class="eyebrow">${esc(p.prompt)} · ${i+1} of ${probs.length}${allowSkip?' · '+esc(T[p.topic].name):''}</span>${mode==='guided'?'<span class="chip">Hints on</span>':''}</div>
+   <div><div class="q">${M(p.q)}</div>${p.given?`<div class="given">${M(p.given)}</div>`:''}</div>
+   <div class="ans"><input id="r-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="${p.type==='eq'?'x = …':p.type==='expr'?'e.g. 3x + 5':'Your answer'}"><button class="btn" id="r-check">Check</button></div>
+   <div class="keys">${['−','x',...(p.type==='expr'&&/y/.test(p.q)?['y']:[]),'(',')'].map(k=>`<button class="key" type="button" data-k="${k}">${k==='x'||k==='y'?`<i>${k}</i>`:k}</button>`).join('')}</div>
+   <div id="r-hints" class="hintbox" hidden></div>
+   <div id="r-fb" hidden></div>
+   <div id="r-extra"></div>
+   <div class="row"><button class="btn sec" id="r-hint" ${mode==='guided'?'':'hidden'}>Show a hint</button>${allowSkip?'<button class="btn ghost" id="r-skip">Haven’t learned this yet</button>':''}<button class="btn" id="r-next" hidden>${i+1<probs.length?'Next problem':'Finish'}</button></div>`;
+  const inp=$('r-in'),fb=$('r-fb'),hb=$('r-hints'),hintBtn=$('r-hint'),nextBtn=$('r-next'),chk=$('r-check'),extra=$('r-extra');
+  card.querySelectorAll('.key').forEach(k=>k.onclick=()=>{const c=k.dataset.k;const st=inp.selectionStart??inp.value.length,en=inp.selectionEnd??st;inp.value=inp.value.slice(0,st)+c+inp.value.slice(en);inp.focus();inp.setSelectionRange(st+c.length,st+c.length)});
+  const addHint=()=>{if(hints>=p.steps.length)return;hb.hidden=false;const d=document.createElement('p');d.innerHTML=`<span class="eyebrow">Step ${hints+1}</span> ${M(p.steps[hints])}`;hb.append(d);hints++;if(hints>=p.steps.length)hintBtn.disabled=true};
+  const say=(cls,html)=>{fb.hidden=false;fb.className='fb '+cls;fb.innerHTML=html};
+  const item=(given,ok)=>({topic:p.topic,q:plain((p.prompt==='Evaluate'?'Evaluate ':p.prompt==='Solve for x'?'Solve ':'Simplify ')+p.q+(p.given?' '+p.given:'')),qd:(p.prompt==='Evaluate'?'':'')+p.q+(p.given?'  ·  '+p.given:''),given,ans:p.ansShow,ok,hints});
+  const finish=(given,ok,showSteps)=>{finished=true;inp.disabled=true;chk.disabled=true;hintBtn.hidden=true;const sk=$('r-skip');if(sk)sk.hidden=true;nextBtn.hidden=false;
+   results.push(item(given,ok));
+   if(showSteps){const box=document.createElement('div');box.style.display='grid';box.style.gap='8px';
+    box.innerHTML=`<p class="eyebrow">Full solution</p><ol class="steps">${p.steps.map(x=>`<li>${M(x)}</li>`).join('')}</ol>`;extra.append(box)}
+   else if(ok&&mode!=='guided'||ok&&hints<p.steps.length){const d=document.createElement('details');d.innerHTML=`<summary>See the steps</summary><ol class="steps" style="margin-top:8px">${p.steps.map(x=>`<li>${M(x)}</li>`).join('')}</ol>`;extra.append(d)}
+   if(!ok)extra.append(tutorBlock(item(given,ok)));
+   nextBtn.focus()};
+  hintBtn.onclick=addHint;
+  chk.onclick=()=>{if(finished)return;const r=check(p,inp.value);
+   if(r.soft){say('info',esc(r.msg));return}
+   if(r.ok){say('ok',pick(['Correct.','That’s it.','Right answer.','Nice work.'])+(hints?` <span style="font-weight:400">(${hints} hint${hints>1?'s':''} used)</span>`:''));finish(inp.value,true,false);return}
+   tries++;
+   if(mode==='test'){say('no',`Not this time. The answer is <span class="m">${M(p.ansShow)}</span>.`);finish(inp.value,false,true);return}
+   if(tries===1){say('no','Not quite. Here’s the next step to help.');addHint();inp.select()}
+   else{say('no',`Still not it. The answer is <span class="m">${M(p.ansShow)}</span>. Read through the steps together.`);finish(inp.value,false,true)}};
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();finished?nextBtn.click():chk.click()}});
+  const sk=$('r-skip');if(sk)sk.onclick=()=>{say('info','Skipped. That’s useful information too.');finish('',false,false)};
+  nextBtn.onclick=()=>{i++;if(i<probs.length){show();$('r-in').focus()}else done(results)};
+  if(i>0)inp.focus()}
+ show()}
+
+function tally(r){return r?{c:r.filter(x=>x.ok).length,t:r.length,h:r.reduce((s,x)=>s+(x.hints||0),0)}:null}
+function renderWrap(body){
+ const s=S.sess,R=s.res;
+ const missed=[...(R.warmup||[]),...(R.practice||[]),...(R.check||[]),...(R.diag||[])].filter(x=>!x.ok);
+ const rec={id:s.id,ts:Date.now(),kind:s.kind,topic:s.topic,minutes:Math.max(1,Math.round((Date.now()-s.start)/60000)),parts:{},missed:missed.slice(0,20).map(({topic,q,qd,given,ans,hints})=>({topic,q,qd,given,ans,hints})),note:''};
+ for(const k of ['warmup','practice','check']){const t=tally(R[k]);if(t)rec.parts[k]=t}
+ if(R.diag){rec.perTopic={};for(const x of R.diag){const pt=rec.perTopic[x.topic]||(rec.perTopic[x.topic]={c:0,t:0});pt.t++;if(x.ok)pt.c++}rec.parts.diag=tally(R.diag)}
+ if(!s.saved){s.saved=true;saveAttempt(rec)}endTimer();
+ let head='',tiles='';
+ if(s.kind==='diagnostic'){const d=rec.parts.diag;let start=TOPICS.find(t=>rec.perTopic[t.id].c<2);
+  head=`<h2>${d.c} of ${d.t} correct</h2><p class="muted">${start?`Suggested starting point: <mark>${esc(start.name)}</mark>. It’s the first topic where he missed something.`:'Every topic came back clean. Use the topic list for extra practice whenever you like.'}</p>`;
+  tiles=`<div class="card" style="padding:8px 20px">${TOPICS.map(t=>{const pt=rec.perTopic[t.id];return `<div class="mrow"><span>${esc(t.name)}</span><div class="bar"><span style="width:${pt.c/pt.t*100}%"></span></div><span class="pct">${pt.c}/${pt.t}</span></div>`}).join('')}</div>`;
+  s.nextTopic=start?start.id:null}
+ else{const ch=rec.parts.check;const pct=ch?ch.c/ch.t:null;
+  head=`<h2>${pct==null?'Practice finished':pct>=.85?'That topic looks solid':pct>=.6?'Getting there':'Worth another round'}</h2><p class="muted">${pct==null?'Run the quiz when he feels ready, so the progress page has a score to track.':pct>=.85?'Next time, move on to the next topic. The warm-up will keep this one fresh.':pct>=.6?'One more session on this topic should lock it in.':'Go back through the lesson together, then do another practice set before the next check.'}</p>`;
+  tiles=`<div class="scores">${['warmup','practice','check'].filter(k=>rec.parts[k]).map(k=>{const t=rec.parts[k];return `<div class="score"><span class="eyebrow">${STAGE_NAMES[k]}</span><b>${t.c}/${t.t}</b><span class="muted" style="font-size:.85rem">${k==='check'?'no hints':t.h+' hint'+(t.h===1?'':'s')+' used'}</span></div>`}).join('')}<div class="score"><span class="eyebrow">Time</span><b>${rec.minutes} min</b><span class="muted" style="font-size:.85rem">${fmtDate(rec.ts)}</span></div></div>`}
+ body.innerHTML=`<div style="display:grid;gap:20px">${head}${tiles}
+  <div style="display:grid;gap:10px"><h3>${missed.length?'Problems to go over':'Nothing missed'}</h3>${missed.length?'<ul class="missed" id="w-missed"></ul>':'<p class="muted">Every problem was answered correctly.</p>'}</div>
+  <div style="display:grid;gap:8px"><label for="w-note"><h3>Note for next time</h3></label><p class="muted" style="font-size:.9rem">What clicked, what didn’t, anything from his homework to revisit.</p><textarea id="w-note" placeholder="e.g. Kept forgetting to flip the sign when distributing a negative."></textarea><div class="row"><button class="btn sec sm" id="w-save">Save note</button><span id="w-saved" class="muted" style="font-size:.9rem"></span></div></div>
+  <div class="row">${s.kind==='diagnostic'?(s.nextTopic?`<button class="btn" id="w-next">Start a session on ${esc(T[s.nextTopic].name)}</button>`:''):`<button class="btn" id="w-again">Another practice set</button>`}<button class="btn sec" id="w-home">Back to home</button></div></div>`;
+ const ul=$('w-missed');if(ul)missed.forEach(m=>{const li=document.createElement('li');
+  li.innerHTML=`<span class="eyebrow">${esc(T[m.topic].name)}</span><div class="q">${M(m.qd)}</div><div>${m.given?`His answer: <span class="m">${M(m.given)}</span> · `:'Skipped · '}Correct: <span class="m">${M(m.ans)}</span></div>`;li.append(tutorBlock(m));ul.append(li)});
+ $('w-save').onclick=async()=>{const ok=await saveNote(rec.id,$('w-note').value.trim());$('w-saved').textContent=ok?'Saved.':'Couldn’t save the note. Try again.'};
+ $('w-home').onclick=()=>go('home');
+ const a=$('w-again');if(a)a.onclick=()=>startSession('practice',s.topic);
+ const n=$('w-next');if(n)n.onclick=()=>startSession('session',s.nextTopic)}
+
+/* ---------- progress ---------- */
+const KIND={session:'Full session',practice:'Practice',quiz:'Quiz',diagnostic:'Mixed check-in'};
+function renderProgress(){
+ const v=$('v-progress'),L=store.list;
+ const week=L.filter(r=>Date.now()-r.ts<7*864e5);
+ const probs=week.reduce((s,r)=>s+Object.values(r.parts||{}).reduce((a,p)=>a+(r.kind==='diagnostic'?0:p.t),0)+(r.parts&&r.parts.diag?r.parts.diag.t:0),0);
+ const right=week.reduce((s,r)=>s+Object.values(r.parts||{}).reduce((a,p)=>a+(r.kind==='diagnostic'?0:p.c),0)+(r.parts&&r.parts.diag?r.parts.diag.c:0),0);
+ const mins=week.reduce((s,r)=>s+(r.minutes||0),0);
+ const mrows=TOPICS.map(t=>{const m=mastery(t.id),st=status(m);return `<div class="mrow"><span>${t.idx+1}. ${esc(t.name)} <span class="chip ${st.c}" style="margin-left:4px">${st.l}</span></span><div class="bar"><span style="width:${m==null?0:Math.round(m*100)}%"></span></div><span class="pct">${m==null?'—':Math.round(m*100)+'%'}</span></div>`}).join('');
+ v.innerHTML=`<div style="display:grid;gap:8px"><h1>Progress</h1><p class="muted">Mastery is the average of the two most recent no-hint scores for each topic (the Check step, quizzes, and the check-in).</p></div>
+  <div class="scores"><div class="score"><span class="eyebrow">Sessions · 7 days</span><b>${week.length}</b></div><div class="score"><span class="eyebrow">Time · 7 days</span><b>${mins} min</b></div><div class="score"><span class="eyebrow">Accuracy · 7 days</span><b>${probs?Math.round(right/probs*100)+'%':'—'}</b><span class="muted" style="font-size:.85rem">${right} of ${probs} problems</span></div></div>
+  <div style="display:grid;gap:8px"><h2>By topic</h2><div class="tbl"><div style="min-width:420px;border-top:1px solid var(--line)">${mrows}</div></div></div>
+  <div style="display:grid;gap:8px"><h2>History</h2>${L.length?'<ul class="hist" id="p-hist"></ul>':'<p class="muted">No sessions yet. Finished sessions, quizzes and check-ins show up here with their scores, missed problems and your notes.</p>'}</div>
+  <div class="card" style="display:grid;gap:10px"><h2>Backup and sharing</h2>
+   <p class="muted">Progress lives on this device. Save a backup file now and then, or to move to a new phone. Restoring merges records and never deletes any.</p>
+   <div class="row"><button class="btn sec sm" id="p-export">Save backup file</button><label class="btn sec sm" for="p-import" style="cursor:pointer">Restore from backup</label><input type="file" id="p-import" accept="application/json,.json" hidden><button class="btn sec sm" id="p-copy">Copy summary as text</button></div>
+   <p id="p-msg" class="muted" style="font-size:.9rem" aria-live="polite"></p></div>
+  <p class="foot">${saveLine()}</p>`;
+ $('p-export').onclick=()=>{exportData();$('p-msg').textContent='Backup created. Keep it in Files, email it to yourself, or AirDrop it.'};
+ $('p-import').onchange=e=>{const f=e.target.files[0];if(f)importData(f,$('p-msg'));e.target.value=''};
+ $('p-copy').onclick=async()=>{const t=summaryText();try{await navigator.clipboard.writeText(t);$('p-msg').textContent='Summary copied. Paste it into a text or email.'}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.append(ta);ta.select();try{document.execCommand('copy');$('p-msg').textContent='Summary copied.'}catch(_){$('p-msg').textContent='Couldn’t copy on this device.'}ta.remove()}};
+ const ul=$('p-hist');if(!ul)return;
+ L.forEach(r=>{const li=document.createElement('li');const P=r.parts||{};
+  const bits=[P.warmup&&`warm-up ${P.warmup.c}/${P.warmup.t}`,P.practice&&`practice ${P.practice.c}/${P.practice.t} (${P.practice.h} hints)`,P.check&&`check ${P.check.c}/${P.check.t}`,P.diag&&`${P.diag.c}/${P.diag.t} correct`].filter(Boolean).join(' · ');
+  li.innerHTML=`<div class="h1"><strong>${esc(r.kind==='diagnostic'?KIND.diagnostic:(T[r.topic]?T[r.topic].name:'')+' · '+KIND[r.kind])}</strong><span class="meta">${fmtDate(r.ts)} · ${r.minutes||1} min</span></div>
+   <div class="meta">${bits}</div>${r.note?`<p style="font-size:.95rem">“${esc(r.note)}”</p>`:''}
+   <div class="row" style="justify-content:space-between">${r.missed&&r.missed.length?`<details style="flex:1 1 100%"><summary>${r.missed.length} missed problem${r.missed.length>1?'s':''}</summary><ul class="missed" style="margin-top:10px">${r.missed.map(m=>`<li><div class="q">${M(m.qd||m.q)}</div><div>${m.given?`His answer: <span class="m">${M(m.given)}</span> · `:'Skipped · '}Correct: <span class="m">${M(m.ans)}</span></div></li>`).join('')}</ul></details>`:''}
+   <button class="btn ghost sm" data-del="${esc(r.id)}">Remove</button></div>`;
+  ul.append(li)});
+ ul.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(!b.dataset.sure){b.dataset.sure='1';b.textContent='Tap again to remove';return}removeAttempt(b.dataset.del)})}
+
+/* ---------- guide ---------- */
+function renderGuide(){$('v-guide').innerHTML=`<div class="guide">
+ <div style="display:grid;gap:8px"><h1>Running a session together</h1><p class="muted">Aim for two or three sessions a week, 20 to 30 minutes each. Short and regular beats long and rare, especially at the start of the year.</p></div>
+ <div class="plan">
+  <div><span class="min">3 min</span><div><strong>Warm-up.</strong> Three problems from earlier topics. Keeps old skills from fading, and gives an easy win to start.</div></div>
+  <div><span class="min">5–8 min</span><div><strong>Learn.</strong> Read the big idea together. Reveal the worked example one step at a time and have him predict each step before you tap.</div></div>
+  <div><span class="min">10 min</span><div><strong>Guided practice.</strong> Five problems with hints. Let him hold the pencil. If he’s stuck for more than a minute, use a hint rather than explaining it yourself.</div></div>
+  <div><span class="min">5 min</span><div><strong>Check.</strong> Five problems, no hints, one try. Let him work alone here; this is the score the progress page tracks.</div></div>
+  <div><span class="min">2 min</span><div><strong>Wrap-up.</strong> Go over anything missed and jot a note for next time. The next session starts where that note leaves off.</div></div>
+ </div>
+ <div class="card" style="display:grid;gap:10px"><h2>When he’s stuck</h2><ul>
+  <li>Ask “What’s the first thing you’d do?” before offering anything. Naming the first step is often enough.</li>
+  <li>Have him explain his wrong answer out loud. Most mistakes are one sign or one skipped step, and he’ll often catch it himself.</li>
+  <li>Use paper next to the screen. Writing each line down is the habit that carries over to tests.</li>
+  <li>Praise the process (“you checked your answer, nice”) more than being right.</li>
+  <li>If a topic stays at “Learning” after two sessions, drop back one topic. The gap is usually underneath it, often negative numbers.</li>
+ </ul></div>
+ <div style="display:grid;gap:10px"><h2>Tips for typing answers</h2><ul>
+  <li>Numbers: <span class="m">7</span>, <span class="m">−3</span> (a regular minus sign works).</li>
+  <li>Equations: <span class="m">5</span> or <span class="m"><i>x</i> = 5</span> are both fine.</li>
+  <li>Expressions: <span class="m">3<i>x</i> + 5</span> or <span class="m">−<i>x</i> + 12</span>. Answers must be fully simplified; an unsimplified but equal answer gets a nudge instead of being marked wrong.</li>
+  <li>The buttons under the answer box add <span class="m">−</span>, <span class="m"><i>x</i></span> and parentheses on a phone keyboard.</li>
+ </ul></div>
+ 
+ <div style="display:grid;gap:8px"><h2>Every problem is new</h2><p class="muted">Problems are generated fresh each time, so he can repeat a topic as often as needed without memorizing answers.</p></div>
+</div>`}
+
+/* ---------- boot ---------- */
+initStore();renderHome();
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>

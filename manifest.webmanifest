@@ -1,0 +1,16 @@
+{
+  "name": "Algebra 1 Sessions",
+  "short_name": "Algebra",
+  "description": "Guided Algebra 1 practice: lessons, hinted practice, quizzes and a progress log.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EEF2F5",
+  "theme_color": "#1E5C86",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
