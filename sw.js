@@ -1,5 +1,5 @@
 // Caches the app so it opens with no connection. Bump VERSION after editing index.html.
-const VERSION = 'alg1-v2';
+const VERSION = 'alg1-v3';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

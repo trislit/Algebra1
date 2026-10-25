@@ -86,6 +86,20 @@ mark{background:var(--mark);color:var(--mark-ink);padding:0 .2em;border-radius:3
 .topics .bar{height:4px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden;max-width:220px}
 .topics .bar span{display:block;height:100%;background:var(--accent)}
 .status{font-size:.9rem}
+.season{display:grid;gap:8px;margin-top:8px}
+.unit{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:4px 16px}
+.unit summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;padding:12px 0}
+.unit summary::-webkit-details-marker{display:none}
+.unit summary::after{content:"";grid-column:1/-1;display:none}
+.unit .un{font-family:var(--f-math);color:var(--muted);font-size:.95rem;white-space:nowrap}
+.unit .ut{font-family:var(--f-display);font-weight:700;min-width:0}
+.unit[open] summary{border-bottom:1px solid var(--line)}
+.unit .topics{border-top:0}
+.unit .topics li:last-child{border-bottom:1px solid var(--line)}
+.unit.soon{background:transparent;border-style:dashed}
+.unit.soon .ut{color:var(--muted)}
+.soonlist{margin:0;padding:10px 0 12px 1.2rem;color:var(--muted);display:grid;gap:4px}
+.unit summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
 
 /* session */
 .stages{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
@@ -103,6 +117,7 @@ mark{background:var(--mark);color:var(--mark-ink);padding:0 .2em;border-radius:3
 .ans{display:flex;gap:8px;flex-wrap:wrap}
 .ans input{flex:1 1 200px;min-width:0;font:1.3rem var(--f-math);padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
 .keys{display:flex;gap:6px;flex-wrap:wrap}
+.key.word{font-family:var(--f-body);font-size:.9rem}
 .key{font:1.05rem var(--f-math);min-width:40px;padding:6px 10px;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
 .fb{padding:12px 14px;border-radius:8px;font-weight:700}
 .fb.ok{background:var(--ok-soft);color:var(--ok)}
@@ -135,6 +150,7 @@ textarea{width:100%;min-height:80px;font:inherit;padding:10px 12px;border-radius
 .hist .h1{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .hist .meta{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
 details summary{cursor:pointer;color:var(--accent);font-weight:700;font-size:.9rem}
+.mhead{font-family:var(--f-display);font-weight:700;padding:14px 0 4px;border-bottom:1px solid var(--line)}
 .mrow{display:grid;grid-template-columns:minmax(0,1fr) 110px 3.5rem;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 .mrow .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
 .mrow .bar span{display:block;height:100%;background:var(--accent)}
@@ -196,8 +212,9 @@ function linF(terms){let show='',plain='';
 function reduceStep(n,d){const r=F(n,d);return (gcd(n,d)>1)?`Reduce: divide the top and bottom by ${gcd(n,d)}. ${U(n,d)} = ${FS(r)}`:`That’s already in lowest terms: ${FS(r)}`}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function M(s){let h=esc(s);h=h.replace(/\[\[f:([^|\]]+)\|([^\]]+)\]\]/g,(m,a,b)=>`<span class="frac"><span>${a}</span><span>${b}</span></span>`);
-  return h.replace(/(^|[^A-Za-z&;#])([xy])(?![A-Za-z])/g,'$1<i class="v">$2</i>')}
-const plain=s=>String(s).replace(/\[\[f:([^|\]]+)\|([^\]]+)\]\]/g,'$1/$2');
+  h=h.replace(/\$([A-Za-z])/g,'<i class="v">$1</i>');
+  return h.replace(/(^|[^A-Za-z&;#"])([xy])(?![A-Za-z"])/g,'$1<i class="v">$2</i>')}
+const plain=s=>String(s).replace(/\$/g,'').replace(/\[\[f:([^|\]]+)\|([^\]]+)\]\]/g,'($1)/($2)').replace(/\(([\w.]+)\)\//g,'$1/').replace(/\/\(([\d.]+|[A-Za-z])\)/g,'/$1');
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
@@ -256,8 +273,44 @@ const TOPICS=[
   memo:'Clearing the fractions turns it into an equation you already know how to solve.',
   ex:{q:'[[f:x|4]] + [[f:1|2]] = [[f:7|4]]',steps:['The common denominator is 4, so multiply every term by 4','4 × [[f:x|4]] = x, 4 × [[f:1|2]] = 2, and 4 × [[f:7|4]] = 7, which leaves x + 2 = 7','Subtract 2 from both sides: x = 5','Check: [[f:5|4]] + [[f:2|4]] = [[f:7|4]] ✓']},
   watch:'Multiplying only some of the terms. Every term on both sides gets multiplied by the denominator.',
-  talk:'Ask: “What number would get rid of all the bottoms?”'}
+  talk:'Ask: “What number would get rid of all the bottoms?”'},
+ {id:'multistep',name:'Multi-step equations',idea:'Longer equations use the same moves, done in a sensible order: clean up each side, gather the x-terms on one side, then undo what is attached to x.',
+  rules:['Distribute and combine like terms on each side first','Move the x-terms to one side by adding or subtracting a term from both sides','Then solve the two-step equation that is left','If the x-terms cancel and what remains is false (like 5 = 2), there is no solution','If the x-terms cancel and what remains is true (like 4 = 4), every number works: all real numbers'],
+  memo:'Clean up, gather the x’s, then undo. Use the “No solution” and “All real numbers” buttons when x disappears.',
+  ex:{q:'5x − 3 = 2x + 9',steps:['Subtract 2x from both sides: 3x − 3 = 9','Add 3 to both sides: 3x = 12','Divide both sides by 3: x = 4','Check: 5(4) − 3 = 17 and 2(4) + 9 = 17 ✓']},
+  watch:'Moving a term without changing its sign. Subtracting 2x from both sides removes +2x; it doesn’t add it to the other side.',
+  talk:'Ask: “Which side should the x’s end up on?” Picking the side with the bigger x-term avoids negatives.'},
+ {id:'literal',name:'Literal equations',idea:'A literal equation is a formula with several letters. Solving for one letter uses exactly the same moves as before; the other letters just ride along as if they were numbers.',
+  rules:['Circle the letter you are solving for','Undo addition and subtraction first, then multiplication and division','A letter multiplied by several others gets divided by all of them','Your answer will still contain letters, and that’s expected'],
+  memo:'Pretend the other letters are numbers you can’t see yet.',
+  ex:{q:'$P = 2$l + 2$w, solve for $l',steps:['Subtract 2$w from both sides: $P − 2$w = 2$l','Divide both sides by 2: $l = [[f:$P − 2$w|2]]']},
+  watch:'Dividing only part of a side. In $P − 2$w = 2$l, both $P and 2$w get divided by 2.',
+  talk:'Do one with numbers first: if P = 20 and w = 3, what is l? Then do the same steps with letters.'},
+ {id:'inequalities',name:'Solving inequalities',idea:'Inequalities solve almost exactly like equations. The one new rule: multiplying or dividing both sides by a negative number flips the inequality sign.',
+  rules:['< means less than, > means greater than, ≤ and ≥ include the number itself','Adding or subtracting on both sides never changes the sign','Multiplying or dividing by a positive keeps the sign','Multiplying or dividing by a negative flips it: < becomes >, ≤ becomes ≥','On a number line, < and > get an open circle; ≤ and ≥ get a closed one'],
+  memo:'Negative multiply or divide: flip the sign. Everything else: same as an equation.',
+  ex:{q:'−3x + 4 ≤ 19',steps:['Subtract 4 from both sides: −3x ≤ 15','Divide both sides by −3 and flip the sign: x ≥ −5','On a number line: closed circle at −5, shaded to the right']},
+  watch:'Forgetting to flip. Test it: pick a number from your answer and plug it into the original. If it fails, the sign needs flipping.',
+  talk:'Have him test one number from his answer in the original inequality. It catches most mistakes.'},
+ {id:'compound',name:'Compound inequalities',idea:'A compound inequality joins two inequalities. With “and”, x must make both true, so the answer is a range between two numbers. With “or”, x needs to make only one true, so the answer points in two directions.',
+  rules:['Three-part form like −2 < x + 1 ≤ 5 means “and”. Do the same step to all three parts','Dividing all three parts by a negative flips both signs; then rewrite it smallest number first','With “or”, solve each inequality separately and keep the word “or”','Type answers like −3 < x ≤ 4, or x < −1 or x ≥ 2'],
+  memo:'And: between. Or: outside, pointing away.',
+  ex:{q:'−4 < 2x + 2 ≤ 10',steps:['Subtract 2 from all three parts: −6 < 2x ≤ 8','Divide all three parts by 2: −3 < x ≤ 4','On a number line: open circle at −3, closed circle at 4, shaded between']},
+  watch:'Doing a step to only two of the three parts. Every part gets the same operation.',
+  talk:'Ask: “Is this an ‘in between’ answer or a ‘two directions’ answer?”'}
 ];
+const UNITS=[
+ {id:'u1',season:'Fall',name:'Foundations',topics:['order','integers','fractions','evaluate','like','distribute']},
+ {id:'u2',season:'Fall',name:'Solving equations',topics:['onestep','twostep','fraceq','multistep','literal']},
+ {id:'u3',season:'Fall',name:'Inequalities',topics:['inequalities','compound']},
+ {id:'u4',season:'Fall',name:'Functions and linear equations',soon:['Function notation','Slope','Slope-intercept form','Writing equations of lines','Graphing lines']},
+ {id:'u5',season:'Winter',name:'Systems of equations',soon:['Substitution','Elimination','Word problems with systems']},
+ {id:'u6',season:'Winter',name:'Exponents',soon:['Exponent rules','Zero and negative exponents','Scientific notation']},
+ {id:'u7',season:'Spring',name:'Polynomials and factoring',soon:['Adding and subtracting polynomials','Multiplying polynomials','Factoring out the GCF','Factoring trinomials','Special products']},
+ {id:'u8',season:'Spring',name:'Quadratics and radicals',soon:['Simplifying square roots','Solving by factoring','The quadratic formula','Graphing parabolas']},
+ {id:'u9',season:'Spring',name:'Exponential functions and data',soon:['Growth and decay','Scatter plots and lines of fit']}];
+UNITS.forEach((u,i)=>u.n=i+1);
+const unitOf=tid=>UNITS.find(u=>u.topics&&u.topics.includes(tid));
 TOPICS.forEach((t,i)=>t.idx=i);
 const T=Object.fromEntries(TOPICS.map(t=>[t.id,t]));
 
@@ -302,6 +355,67 @@ const GEN={
    q=`${linF([[c,'x'],[F(b),'']]).show} = ${N(e)}`;
    steps=[`Undo the ${b<0?'subtraction':'addition'} first: ${b<0?`add ${-b} to`:`subtract ${b} from`} both sides. That leaves ${linF([[c,'x']]).show} = ${N(e-b)}`,`Multiply both sides by the reciprocal ${FS(rc)}: x = ${N(e-b)} × ${FP(rc)}`,`x = ${FS(x)}`]}
   return {prompt:'Solve for x',q,type:'eq',ans:fv(x),frac:true,ansShow:`x = ${FS(x)}`,steps}},
+ multistep(){const f=pick([0,0,1,1,2,2,3]);let x=nz(-10,10),q,steps,a,b,c,d;
+  const fin=(k,v)=>k===1?`x = ${N(x)}`:`Divide both sides by ${N(k)}: x = ${N(x)}`;
+  if(f===0){do{a=nz(-9,9);c=nz(-9,9)}while(a===c);b=nz(-15,15);d=a*x+b-c*x;const k=a-c;
+   q=`${lin([[a,'x'],[b,'']])} = ${lin([[c,'x'],[d,'']])}`;
+   steps=[`Gather the x-terms on the left: ${c<0?`add ${lin([[-c,'x']])} to`:`subtract ${lin([[c,'x']])} from`} both sides. ${lin([[k,'x'],[b,'']])} = ${N(d)}`,`${b<0?`Add ${-b} to`:`Subtract ${b} from`} both sides: ${lin([[k,'x']])} = ${N(d-b)}`,fin(k)]}
+  if(f===1){a=ri(2,6);b=nz(-8,8);do{c=nz(-6,6)}while(a+c===0);const k=a+c;d=k*x+a*b;
+   q=`${a}(${lin([[1,'x'],[b,'']])}) ${sg(c)} ${A(c)===1?'':A(c)}x = ${N(d)}`;
+   steps=[`Distribute: ${lin([[a,'x'],[a*b,''],[c,'x']])} = ${N(d)}`,`Combine like terms: ${lin([[k,'x'],[a*b,'']])} = ${N(d)}`,`${a*b<0?`Add ${-a*b} to`:`Subtract ${a*b} from`} both sides: ${lin([[k,'x']])} = ${N(d-a*b)}`,fin(k)]}
+  if(f===2){a=ri(2,6);b=nz(-7,7);do{c=nz(-8,8)}while(c===a);const e=a*(x+b)-c*x,k=a-c;
+   q=`${a}(${lin([[1,'x'],[b,'']])}) = ${lin([[c,'x'],[e,'']])}`;
+   steps=[`Distribute on the left: ${lin([[a,'x'],[a*b,'']])} = ${lin([[c,'x'],[e,'']])}`,`${c<0?`Add ${lin([[-c,'x']])} to`:`Subtract ${lin([[c,'x']])} from`} both sides: ${lin([[k,'x'],[a*b,'']])} = ${N(e)}`,`${a*b<0?`Add ${-a*b} to`:`Subtract ${a*b} from`} both sides: ${lin([[k,'x']])} = ${N(e-a*b)}`,fin(k)]}
+  if(f===3){a=ri(2,6);b=nz(-8,8);const all=Math.random()<.5;c=all?a*b:a*b+nz(-6,6);
+   q=`${a}(${lin([[1,'x'],[b,'']])}) = ${lin([[a,'x'],[c,'']])}`;
+   steps=[`Distribute: ${lin([[a,'x'],[a*b,'']])} = ${lin([[a,'x'],[c,'']])}`,`Subtract ${a}x from both sides: ${N(a*b)} = ${N(c)}`,all?'The x-terms are gone and what’s left is always true, so every value of x works: all real numbers.':'The x-terms are gone and what’s left is false, so no value of x works: no solution.'];
+   return {prompt:'Solve for x',q,type:'eq',specialOK:true,special:all?'all':'none',ans:NaN,ansShow:all?'All real numbers':'No solution',steps}}
+  return {prompt:'Solve for x',q,type:'eq',specialOK:true,ans:x,ansShow:`x = ${N(x)}`,steps}},
+ literal(){const L=[
+   {q:'$d = $r$t',t:'t',a:'[[f:$d|$r]]',p:'d/r',v:'drt',s:['$t is multiplied by $r, so divide both sides by $r.','$t = [[f:$d|$r]]']},
+   {q:'$d = $r$t',t:'r',a:'[[f:$d|$t]]',p:'d/t',v:'drt',s:['$r is multiplied by $t, so divide both sides by $t.','$r = [[f:$d|$t]]']},
+   {q:'$A = $l$w',t:'w',a:'[[f:$A|$l]]',p:'a/l',v:'alw',s:['$w is multiplied by $l, so divide both sides by $l.','$w = [[f:$A|$l]]']},
+   {q:'$P = 2$l + 2$w',t:'l',a:'[[f:$P − 2$w|2]]',p:'(p-2w)/2',v:'plw',s:['Subtract 2$w from both sides: $P − 2$w = 2$l','Divide both sides by 2: $l = [[f:$P − 2$w|2]] (or $l = [[f:$P|2]] − $w)']},
+   {q:'$I = $P$r$t',t:'t',a:'[[f:$I|$P$r]]',p:'i/(p*r)',v:'iprt',s:['$t is multiplied by both $P and $r, so divide both sides by $P$r.','$t = [[f:$I|$P$r]]']},
+   {q:'y = $mx + $b',t:'x',a:'[[f:y − $b|$m]]',p:'(y-b)/m',v:'ybm',s:['Subtract $b from both sides: y − $b = $mx','Divide both sides by $m: x = [[f:y − $b|$m]]']},
+   {q:'y = $mx + $b',t:'b',a:'y − $mx',p:'y-m*x',v:'ymx',s:['Subtract $mx from both sides.','$b = y − $mx']},
+   {q:'$V = $l$w$h',t:'h',a:'[[f:$V|$l$w]]',p:'v/(l*w)',v:'vlwh',s:['$h is multiplied by $l and $w, so divide both sides by $l$w.','$h = [[f:$V|$l$w]]']},
+   {q:'$A = [[f:1|2]]$b$h',t:'h',a:'[[f:2$A|$b]]',p:'2a/b',v:'abh',s:['Multiply both sides by 2 to clear the fraction: 2$A = $b$h','Divide both sides by $b: $h = [[f:2$A|$b]]']},
+   {q:'$F = [[f:9|5]]$C + 32',t:'C',a:'[[f:5|9]]($F − 32)',p:'5/9*(f-32)',v:'fc',s:['Subtract 32 from both sides: $F − 32 = [[f:9|5]]$C','Multiply both sides by the reciprocal [[f:5|9]]: $C = [[f:5|9]]($F − 32)']},
+   {q:'$a$x + $b = $c',t:'x',a:'[[f:$c − $b|$a]]',p:'(c-b)/a',v:'axbc',s:['Subtract $b from both sides: $a$x = $c − $b','Divide both sides by $a: $x = [[f:$c − $b|$a]]']}];
+  if(Math.random()<.35){const a=nzBig(-6,6),b=nzBig(-5,5),c=nz(-12,12);const num=b<0?lin([[-c,''],[a,'x']]):lin([[c,''],[-a,'x']]);
+   return {prompt:'Solve for y',q:`${lin([[a,'x'],[b,'y']])} = ${N(c)}`,given:'Solve for y',type:'lit',vars:'xy',ansExpr:`(${c}-(${a})*x)/(${b})`,
+    ansShow:`y = [[f:${num}|${A(b)}]]`,steps:[`Get the y-term alone: ${a<0?`add ${lin([[-a,'x']])} to`:`subtract ${lin([[a,'x']])} from`} both sides. ${lin([[b,'y']])} = ${lin([[c,''],[-a,'x']])}`,`Divide every term by ${N(b)}: y = [[f:${num}|${A(b)}]]`,`Same thing written as slope-intercept form: y = ${linF([[F(-a,b),'x'],[F(c,b),'']]).show}`]}}
+  const t=pick(L).valueOf();const tv=t.t==='x'?'x':'$'+t.t;
+  return {prompt:'Solve for '+t.t,q:t.q,given:'Solve for '+tv,type:'lit',vars:t.v,ansExpr:t.p,ansShow:`${tv} = ${t.a}`,steps:t.s}},
+ inequalities(){const f=ri(0,3);const ops=['<','>','≤','≥'],FL={'<':'>','>':'<','≤':'≥','≥':'≤'};let op=pick(ops),q,val,fop=op,steps=[];
+  if(f===0){const a=nz(-12,12);val=nz(-10,10);q=`${lin([[1,'x'],[a,'']])} ${op} ${N(val+a)}`;
+   steps=[`${a<0?`Add ${-a} to`:`Subtract ${a} from`} both sides. Adding or subtracting never flips the sign.`,`x ${op} ${N(val)}`]}
+  if(f===1){const a=Math.random()<.6?-ri(2,9):ri(2,9);val=nz(-9,9);q=`${N(a)}x ${op} ${N(a*val)}`;if(a<0)fop=FL[op];
+   steps=[a<0?`Divide both sides by ${N(a)}. Dividing by a negative flips the sign: ${op} becomes ${fop}.`:`Divide both sides by ${a}. Dividing by a positive keeps the sign.`,`x ${fop} ${N(val)}`]}
+  if(f===2){const a=nzBig(-6,6),b=nz(-12,12);val=nz(-8,8);const c=a*val+b;q=`${lin([[a,'x'],[b,'']])} ${op} ${N(c)}`;if(a<0)fop=FL[op];
+   steps=[`${b<0?`Add ${-b} to`:`Subtract ${b} from`} both sides: ${N(a)}x ${op} ${N(c-b)}`,a<0?`Divide both sides by ${N(a)} and flip the sign: x ${fop} ${N(val)}`:`Divide both sides by ${a}: x ${fop} ${N(val)}`]}
+  if(f===3){const a=Math.random()<.5?-ri(2,5):ri(2,5),k=nz(-6,6);val=a*k;q=`[[f:x|${N(a)}]] ${op} ${N(k)}`;if(a<0)fop=FL[op];
+   steps=[a<0?`Multiply both sides by ${N(a)}. Multiplying by a negative flips the sign: ${op} becomes ${fop}.`:`Multiply both sides by ${a}. The sign stays the same.`,`x ${fop} ${N(val)}`]}
+  steps.push(`On a number line: ${fop==='<'||fop==='>'?'open':'closed'} circle at ${N(val)}, shaded to the ${fop==='<'||fop==='≤'?'left':'right'}.`);
+  const asc=o=>({'≤':'<=','≥':'>='}[o]||o);
+  return {prompt:'Solve',q,type:'ineq',ansIneq:`x ${asc(fop)} ${val}`,ansShow:`x ${fop} ${N(val)}`,steps}},
+ compound(){const f=ri(0,2);const so=()=>pick(['<','≤']),asc=o=>({'≤':'<=','≥':'>='}[o]||o),M2={'<':'>','≤':'≥'};let q,steps,show;
+  if(f===0){const lo=ri(-10,2),hi=lo+ri(2,10),a=nz(-9,9),o1=so(),o2=so();
+   q=`${N(lo+a)} ${o1} ${lin([[1,'x'],[a,'']])} ${o2} ${N(hi+a)}`;show=`${N(lo)} ${o1} x ${o2} ${N(hi)}`;
+   steps=['x is in the middle, so this means “and”: x has to make both parts true.',`${a<0?`Add ${-a} to`:`Subtract ${a} from`} all three parts: ${show}`,`On a number line: ${o1==='<'?'open':'closed'} circle at ${N(lo)}, ${o2==='<'?'open':'closed'} circle at ${N(hi)}, shaded between.`];
+   return {prompt:'Solve',q,type:'ineq',ansIneq:`${lo} ${asc(o1)} x ${asc(o2)} ${hi}`,ansShow:show,steps}}
+  if(f===1){const a=nzBig(-4,4),b=nz(-9,9),L=ri(-8,1),H=L+ri(2,8),o1=so(),o2=so();
+   if(a>0){q=`${N(a*L+b)} ${o1} ${lin([[a,'x'],[b,'']])} ${o2} ${N(a*H+b)}`;show=`${N(L)} ${o1} x ${o2} ${N(H)}`;
+    steps=[`${b<0?`Add ${-b} to`:`Subtract ${b} from`} all three parts: ${N(a*L)} ${o1} ${a}x ${o2} ${N(a*H)}`,`Divide all three parts by ${a}: ${show}`];
+    return {prompt:'Solve',q,type:'ineq',ansIneq:`${L} ${asc(o1)} x ${asc(o2)} ${H}`,ansShow:show,steps}}
+   q=`${N(a*H+b)} ${o1} ${lin([[a,'x'],[b,'']])} ${o2} ${N(a*L+b)}`;show=`${N(L)} ${o2} x ${o1} ${N(H)}`;
+   steps=[`${b<0?`Add ${-b} to`:`Subtract ${b} from`} all three parts: ${N(a*H)} ${o1} ${N(a)}x ${o2} ${N(a*L)}`,`Divide all three parts by ${N(a)} and flip both signs: ${N(H)} ${M2[o1]} x ${M2[o2]} ${N(L)}`,`Rewrite it with the smallest number first: ${show}`];
+   return {prompt:'Solve',q,type:'ineq',ansIneq:`${L} ${asc(o2)} x ${asc(o1)} ${H}`,ansShow:show,steps}}
+  const p=ri(-10,0),r=p+ri(2,10),o1=pick(['<','≤']),o2=pick(['>','≥']),a=nz(-9,9),k=ri(2,5);
+  q=`${lin([[1,'x'],[a,'']])} ${o1} ${N(p+a)}  or  ${k}x ${o2} ${N(k*r)}`;show=`x ${o1} ${N(p)} or x ${o2} ${N(r)}`;
+  steps=['With “or”, solve each inequality on its own.',`Left: ${a<0?`add ${-a}`:`subtract ${a}`} on both sides to get x ${o1} ${N(p)}. Right: divide by ${k} to get x ${o2} ${N(r)}.`,`Answer: ${show}. On a number line, two arrows pointing away from each other.`];
+  return {prompt:'Solve',q,type:'ineq',ansIneq:`x ${asc(o1)} ${p} or x ${asc(o2)} ${r}`,ansShow:show,steps}},
  evaluate(){const f=ri(0,4);let a,b,x,y,q,given,ans,steps;
   if(f===0){a=nzBig(-6,7);b=nz(-10,10);x=nz(-5,6);const ax=a*x;ans=ax+b;q=lin([[a,'x'],[b,'']]);given=`when x = ${N(x)}`;
    steps=[`Replace x with (${N(x)}): ${N(a)}(${N(x)}) ${sg(b)} ${A(b)}`,`Multiply: ${N(a)} × ${P(x)} = ${N(ax)}, which leaves ${N(ax)} ${sg(b)} ${A(b)}.`,`${N(ax)} ${sg(b)} ${A(b)} = ${N(ans)}`]}
@@ -363,7 +477,7 @@ function norm(s){return String(s).toLowerCase().replace(/[−–—]/g,'-').repl
 function parse(src){const s=norm(src);const toks=[];let i=0;
  while(i<s.length){const c=s[i];if(/\s/.test(c)){i++;continue}
   if(/[0-9.]/.test(c)){let j=i;while(j<s.length&&/[0-9.]/.test(s[j]))j++;const v=parseFloat(s.slice(i,j));if(isNaN(v))throw 0;toks.push({t:'n',v});i=j;continue}
-  if(c==='x'||c==='y'){toks.push({t:'v',v:c});i++;continue}
+  if(/[a-z]/.test(c)){toks.push({t:'v',v:c});i++;continue}
   if('+-*/^()'.includes(c)){toks.push({t:c});i++;continue}
   throw 0}
  let p=0;const pk=()=>toks[p];
@@ -380,8 +494,24 @@ function parse(src){const s=norm(src);const toks=[];let i=0;
 function simplified(s){s=norm(s).replace(/\s/g,'');if(s.includes('('))return false;
  const terms=s.replace(/(?!^)[+-]/g,m=>'|'+m).split('|');const seen=new Set();
  for(const t of terms){const k=(t.match(/[xy](\^\d+)?/g)||[]).sort().join('');if(seen.has(k))return false;seen.add(k)}return true}
+const SPECIAL={none:/no\s*sol|none|∅|no answer|empty/i,all:/all\s*real|infinit|every|any\s*num|ℝ|identity|all\s*numbers/i};
+function chainPred(chunk){const toks=chunk.split(/(<=|>=|<|>)/).map(t=>t.trim());
+ if(toks.length<3||toks.length%2===0)throw 0;const ex=[];
+ for(let i=0;i<toks.length;i+=2){if(toks[i]==='x')ex.push(null);else{const P=parse(toks[i]);if(P.vars.size)throw 0;ex.push(P.f({}))}}
+ if(ex.filter(e=>e===null).length!==1)throw 0;
+ return v=>{for(let i=0;i+1<ex.length;i++){const a=ex[i]??v,b=ex[i+1]??v,op=toks[2*i+1];if(!(op==='<'?a<b:op==='>'?a>b:op==='<='?a<=b:a>=b))return false}return true}}
+function ineqPred(src){const s=norm(src).replace(/≤/g,'<=').replace(/≥/g,'>=').replace(/=</g,'<=').replace(/=>/g,'>=');
+ const ors=s.split(/\bor\b|\|\|/).map(part=>{const ps=part.split(/\band\b|&&|,/).map(chainPred);return v=>ps.every(p=>p(v))});
+ return v=>ors.some(p=>p(v))}
 function check(prob,input){
  if(!String(input).trim())return {ok:false,soft:true,msg:'Type an answer first.'};
+ if(prob.type==='ineq'){if(!/x/i.test(input)||!/[<>≤≥]/.test(input))return {ok:false,soft:true,msg:'Write the answer as an inequality with x, like x > 3 or −2 < x ≤ 5.'};
+  let P;try{P=ineqPred(input)}catch(e){return {ok:false,soft:true,msg:'That couldn’t be read. Try x ≥ −4, or −3 < x ≤ 4, or x < 1 or x > 5.'}}
+  const K=ineqPred(prob.ansIneq);for(let v=-40;v<=40;v+=.25)if(P(v)!==K(v))return {ok:false};return {ok:true}}
+ if(prob.specialOK){for(const k in SPECIAL)if(SPECIAL[k].test(input))return {ok:prob.special===k};if(prob.special)return {ok:false}}
+ if(prob.type==='lit'){let s=String(input).replace(/^\s*[a-z]\s*=\s*/i,'');let P;try{P=parse(s)}catch(e){return {ok:false,soft:true,msg:'That couldn’t be read. Try something like (P − 2w)/2.'}}
+  const K=parse(prob.ansExpr),vs=[...prob.vars.toLowerCase()];for(const v of P.vars)if(!vs.includes(v))return {ok:false,soft:true,msg:'Use only the letters in the formula.'};
+  for(let t=0;t<4;t++){const pt={};vs.forEach((v,i)=>pt[v]=1.3+((t*7+i*3)%11)*0.61);const d=P.f(pt)-K.f(pt);if(!(Math.abs(d)<1e-6*Math.max(1,Math.abs(K.f(pt)))))return {ok:false}}return {ok:true}}
  let s=String(input);if(prob.type==='eq')s=s.replace(/^\s*[xy]\s*=\s*/i,'');
  if(prob.type!=='expr')s=norm(s).replace(/^\s*(-?)\s*(\d+)\s+(\d+)\s*\/\s*(\d+)\s*$/,(m,g,w,n,d)=>`${g}(${w}+${n}/${d})`);
  let U;try{U=parse(s)}catch(e){return {ok:false,soft:true,msg:'That answer couldn’t be read. Try something like 7, −3, or 4x + 2.'}}
@@ -417,9 +547,9 @@ function importData(file,msgEl){const fr=new FileReader();fr.onload=()=>{try{con
   lsWrite(cur);load();msgEl.textContent=n?`Added ${n} record${n>1?'s':''} from the backup.`:'Nothing new in that file; everything was already here.';renderProgress();$('p-msg').textContent=msgEl.textContent}
  catch(e){msgEl.textContent='That file isn’t an Algebra progress backup.'}};fr.readAsText(file)}
 function summaryText(){const lines=['Algebra 1 progress, '+new Date().toLocaleDateString()];
- for(const t of TOPICS){const m=mastery(t.id);lines.push(`${t.idx+1}. ${t.name}: ${status(m).l}${m==null?'':' ('+Math.round(m*100)+'%)'}`)}
+ for(const t of TOPICS){const m=mastery(t.id);if(m==null)continue;lines.push(`${t.idx+1}. ${t.name}: ${status(m).l}${m==null?'':' ('+Math.round(m*100)+'%)'}`)}
  lines.push('','Recent:');for(const r of store.list.slice(0,8)){const P=r.parts||{};const sc=P.check?`check ${P.check.c}/${P.check.t}`:P.diag?`${P.diag.c}/${P.diag.t}`:P.practice?`practice ${P.practice.c}/${P.practice.t}`:'';
-  lines.push(`- ${fmtDate(r.ts)}: ${r.kind==='diagnostic'?'Mixed check-in':(T[r.topic]?T[r.topic].name:'')+' '+(KIND[r.kind]||'').toLowerCase()} ${sc}${r.note?' · note: '+r.note:''}`)}
+  lines.push(`- ${fmtDate(r.ts)}: ${r.kind==='diagnostic'?diagLabel(r):(T[r.topic]?T[r.topic].name:'')+' '+(KIND[r.kind]||'').toLowerCase()} ${sc}${r.note?' · note: '+r.note:''}`)}
  return lines.join('\n')}
 
 /* ---------- mastery ---------- */
@@ -444,43 +574,50 @@ const fmtDate=ts=>new Date(ts).toLocaleDateString(undefined,{weekday:'short',mon
 const saveLine=()=>store.ok?'Works offline. Progress is saved on this device; use Backup on the Progress tab to move it or keep a copy.':'This browser isn’t letting the app save, so progress will be lost when it closes. Add it to the home screen or open it in Safari or Chrome instead.';
 
 /* ---------- home ---------- */
+function unitStats(u){const ms=u.topics.map(mastery);return {solid:ms.filter(m=>m!=null&&m>=.85).length,started:ms.filter(m=>m!=null).length,avg:ms.reduce((s,m)=>s+(m||0),0)/u.topics.length}}
+function topicRow(t){const m=mastery(t.id),st=status(m);return `<li>
+   <span class="num">${t.idx+1}</span>
+   <div class="name">${esc(t.name)}<div class="bar"><span style="width:${m==null?0:Math.round(m*100)}%"></span></div></div>
+   <span class="chip ${st.c}">${st.l}</span>
+   <div class="sub"><button class="btn ghost sm" data-act="session" data-t="${t.id}">Full session</button><button class="btn ghost sm" data-act="lesson" data-t="${t.id}">Lesson</button><button class="btn ghost sm" data-act="practice" data-t="${t.id}">Practice</button><button class="btn ghost sm" data-act="quiz" data-t="${t.id}">Quiz</button></div></li>`}
+let openUnits=null;
 function renderHome(){
- const rec=recommend();const v=$('v-home');
+ const rec=recommend();const v=$('v-home');const recU=rec&&rec!=='all'?unitOf(rec.id):null;
+ if(!openUnits){openUnits=new Set();try{JSON.parse(localStorage.getItem('alg1-open')||'[]').forEach(x=>openUnits.add(x))}catch(e){}if(!openUnits.size)openUnits.add(recU?recU.id:'u1')}
  let next;
  if(rec===null){next=`<div class="card next">
    <p class="eyebrow">Start here</p>
-   <p class="big">Take the 15-minute check-in</p>
-   <p class="muted">${TOPICS.length*2} questions, two from each topic below. It shows where he’s comfortable and where to begin, so the first session isn’t a guess.</p>
-   <div class="row"><button class="btn" id="h-diag">Start the check-in</button><button class="btn sec" id="h-first">Skip it and start with topic 1</button></div></div>`}
- else if(rec==='all'){next=`<div class="card next"><p class="eyebrow">Next up</p><p class="big">Every topic is solid</p>
-   <p class="muted">Run the mixed check-in to keep it fresh, or pick any topic for extra practice.</p>
-   <div class="row"><button class="btn" id="h-diag">Mixed check-in</button></div></div>`}
- else{const m=mastery(rec.id),st=status(m);next=`<div class="card next"><p class="eyebrow">Next session · topic ${rec.idx+1} of ${TOPICS.length}</p>
+   <p class="big">Take the Unit 1 check-in</p>
+   <p class="muted">${UNITS[0].topics.length*2} questions, two from each Foundations topic. It shows where he’s comfortable and where to begin, so the first session isn’t a guess.</p>
+   <div class="row"><button class="btn" data-diag="u1">Start the check-in</button><button class="btn sec" data-act="session" data-t="order">Skip it and start with topic 1</button></div></div>`}
+ else if(rec==='all'){next=`<div class="card next"><p class="eyebrow">Next up</p><p class="big">Every topic so far is solid</p>
+   <p class="muted">Run a unit check-in to keep things fresh. More units are on the way.</p></div>`}
+ else{const m=mastery(rec.id),st=status(m);next=`<div class="card next"><p class="eyebrow">Next session · Unit ${recU.n}, ${esc(recU.name)}</p>
    <p class="big">${esc(rec.name)}</p>
    <p><span class="chip ${st.c}">${st.l}</span> <span class="muted">${m==null?'Not tried yet.':'Recent check score: '+Math.round(m*100)+'%'}</span></p>
    <p class="muted">About 25 minutes: warm-up, a short lesson, guided practice with hints, then a 5-question check.</p>
    <div class="row"><button class="btn" data-act="session" data-t="${rec.id}">Start session</button><button class="btn sec" data-act="lesson" data-t="${rec.id}">Just the lesson</button></div></div>`}
- const rows=TOPICS.map((t,i)=>{const m=mastery(t.id),st=status(m);return `<li>
-   <span class="num">${i+1}</span>
-   <div class="name">${esc(t.name)}<div class="bar"><span style="width:${m==null?0:Math.round(m*100)}%"></span></div></div>
-   <span class="chip ${st.c}">${st.l}</span>
-   <div class="sub"><button class="btn ghost sm" data-act="session" data-t="${t.id}">Full session</button><button class="btn ghost sm" data-act="lesson" data-t="${t.id}">Lesson</button><button class="btn ghost sm" data-act="practice" data-t="${t.id}">Practice</button><button class="btn ghost sm" data-act="quiz" data-t="${t.id}">Quiz</button></div></li>`}).join('');
+ const seasons=['Fall','Winter','Spring'].map(se=>{const us=UNITS.filter(u=>u.season===se);return `<div class="season"><p class="eyebrow">${se}</p>${us.map(u=>{
+   if(!u.topics)return `<details class="unit soon" data-u="${u.id}"${openUnits.has(u.id)?' open':''}><summary><span class="un">Unit ${u.n}</span><span class="ut">${esc(u.name)}</span><span class="chip">Coming soon</span></summary><ul class="soonlist">${u.soon.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`;
+   const st=unitStats(u);return `<details class="unit" data-u="${u.id}"${openUnits.has(u.id)?' open':''}><summary><span class="un">Unit ${u.n}</span><span class="ut">${esc(u.name)}</span><span class="chip ${st.solid===u.topics.length?'s3':st.started?'s2':''}">${st.solid} of ${u.topics.length} solid</span></summary>
+    <ul class="topics">${u.topics.map(id=>topicRow(T[id])).join('')}</ul>
+    <div class="row" style="padding:12px 0 4px"><button class="btn sec sm" data-diag="${u.id}">Unit ${u.n} check-in</button><span class="muted" style="font-size:.85rem">${u.topics.length*2} questions, no hints</span></div></details>`}).join('')}</div>`}).join('');
  v.innerHTML=`<div style="display:grid;gap:8px"><h1>Algebra, a little at a time</h1><p class="muted">Short sessions for the two of you: learn one idea, practice it with hints, then check it. Scores and missed problems are logged so you can see what to review.</p></div>
   ${next}
-  <div style="display:grid;gap:12px"><div class="row" style="justify-content:space-between"><h2>The ${TOPICS.length} topics</h2><button class="btn sec sm" id="h-diag2">Mixed check-in</button></div>
-  <p class="muted">These follow the usual order of an Algebra 1 course’s opening weeks. Each one leans on the ones above it.</p>
-  <ul class="topics">${rows}</ul></div>
+  <div style="display:grid;gap:12px"><h2>The year</h2>
+  <p class="muted">Units follow the usual order of an Algebra 1 course. Each topic leans on the ones before it, and greyed units are planned for later.</p>
+  ${seasons}</div>
   <p class="foot">${saveLine()}</p>`;
  v.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>startSession(b.dataset.act,b.dataset.t));
- const d=$('h-diag');if(d)d.onclick=()=>startSession('diagnostic');
- $('h-diag2').onclick=()=>startSession('diagnostic');
- const f=$('h-first');if(f)f.onclick=()=>startSession('session','order');
+ v.querySelectorAll('[data-diag]').forEach(b=>b.onclick=()=>startSession('diagnostic',b.dataset.diag));
+ v.querySelectorAll('details.unit').forEach(d=>d.addEventListener('toggle',()=>{d.open?openUnits.add(d.dataset.u):openUnits.delete(d.dataset.u);try{localStorage.setItem('alg1-open',JSON.stringify([...openUnits]))}catch(e){}}));
 }
 
 /* ---------- sessions ---------- */
 const STAGE_NAMES={warmup:'Warm-up',learn:'Learn',practice:'Guided practice',check:'Check',diag:'Check-in',wrap:'Wrap-up'};
 function startSession(kind,topic){
  const stages={session:['warmup','learn','practice','check','wrap'],lesson:['learn'],practice:['practice','wrap'],quiz:['check','wrap'],diagnostic:['diag','wrap']}[kind];
+ if(kind==='diagnostic'&&!topic)topic='u1';
  S.sess={id:uid(),kind,topic:topic||null,stages,stage:0,res:{},start:Date.now(),saved:false};
  endTimer();S.timer=setInterval(()=>{const el=$('s-timer');if(el)el.textContent=mins()},20000);
  go('session');renderStage()}
@@ -489,13 +626,13 @@ const mins=()=>{const m=Math.max(1,Math.round((Date.now()-S.sess.start)/60000));
 function nextStage(){S.sess.stage++;renderStage();window.scrollTo(0,0)}
 function renderStage(){
  const s=S.sess,v=$('v-session'),key=s.stages[s.stage];
- const title=s.kind==='diagnostic'?'Mixed check-in':T[s.topic].name;
- v.innerHTML=`<div class="shead"><div class="row"><div><p class="eyebrow">${s.kind==='diagnostic'?'All '+TOPICS.length+' topics':'Topic '+(T[s.topic].idx+1)}</p><h1>${esc(title)}</h1></div><span class="timer" id="s-timer">${mins()}</span></div>
+ const U0=s.kind==='diagnostic'?UNITS.find(u=>u.id===s.topic):null;const title=U0?U0.name:T[s.topic].name;
+ v.innerHTML=`<div class="shead"><div class="row"><div><p class="eyebrow">${U0?'Unit '+U0.n+' check-in':'Unit '+unitOf(s.topic).n+' · topic '+(T[s.topic].idx+1)}</p><h1>${esc(title)}</h1></div><span class="timer" id="s-timer">${mins()}</span></div>
   ${s.stages.length>1?`<div class="stages">${s.stages.map((k,i)=>`<span class="stage ${i<s.stage?'done':i===s.stage?'on':''}">${STAGE_NAMES[k]}</span>`).join('')}</div>`:''}</div>
   <div id="s-body"></div>`;
  const body=$('s-body');
  if(key==='learn')return renderLesson(body);
- if(key==='warmup'){const prev=TOPICS.slice(0,T[s.topic].idx);const pool=prev.length?prev:[T[s.topic]];
+ if(key==='warmup'){const prev=TOPICS.slice(Math.max(0,T[s.topic].idx-5),T[s.topic].idx);const pool=prev.length?prev:[T[s.topic]];
   const probs=[0,1,2].map(()=>gen(pick(pool).id));
   body.append(intro(prev.length?'Three quick problems from earlier topics to get warmed up. Hints are available.':'Three quick problems to get warmed up. Hints are available.'));
   return runner(body,probs,'guided',r=>{s.res.warmup=r;nextStage()})}
@@ -503,8 +640,8 @@ function renderStage(){
   return runner(body,genSet(s.topic,5),'guided',r=>{s.res.practice=r;nextStage()})}
  if(key==='check'){body.append(intro('Five problems, no hints, one try each. This score is what the progress page tracks.'));
   return runner(body,genSet(s.topic,5),'test',r=>{s.res.check=r;nextStage()})}
- if(key==='diag'){const probs=[];TOPICS.forEach(t=>probs.push(...genSet(t.id,2)));
-  body.append(intro(TOPICS.length*2+' problems, two per topic, from easiest topic to hardest. No hints. It’s fine to skip anything he hasn’t seen yet.'));
+ if(key==='diag'){const probs=[];U0.topics.forEach(t=>probs.push(...genSet(t,2)));
+  body.append(intro(probs.length+' problems, two per topic in this unit, in the order they’re taught. No hints. It’s fine to skip anything he hasn’t seen yet.'));
   return runner(body,probs,'test',r=>{s.res.diag=r;nextStage()},true)}
  if(key==='wrap')return renderWrap(body)}
 function intro(t){const p=document.createElement('p');p.className='muted';p.textContent=t;p.style.marginBottom='12px';return p}
@@ -526,6 +663,11 @@ function renderLesson(body){
  $('l-go').onclick=()=>{if(s.kind==='lesson')startSession('practice',s.topic);else nextStage()};
  const h=$('l-home');if(h)h.onclick=()=>{endTimer();go('home')}}
 
+function keysFor(p){const k=[];
+ if(p.type==='ineq'){k.push({k:'<'},{k:'>'},{k:'≤'},{k:'≥'},{k:'−'},{k:'x'});if(p.topic==='compound')k.push({k:' or ',label:'or'});return k}
+ if(p.type==='lit'){k.push({k:'−'},{k:'/'},{k:'('},{k:')'});for(const v of p.vars)k.push({k:p.q.includes('$'+v.toUpperCase())?v.toUpperCase():v});return k}
+ k.push({k:'−'},{k:'x'});if(p.type==='expr'&&/y/.test(p.q))k.push({k:'y'});if(p.frac||/\[\[f:/.test(p.q+(p.given||'')))k.push({k:'/'});k.push({k:'('},{k:')'});
+ if(p.specialOK)k.push({set:'No solution',label:'No solution'},{set:'All real numbers',label:'All real numbers'});return k}
 function runner(host,probs,mode,done,allowSkip){
  const results=[];let i=0;
  const card=document.createElement('div');card.className='card prob';host.append(card);
@@ -533,17 +675,17 @@ function runner(host,probs,mode,done,allowSkip){
   const p=probs[i];let tries=0,hints=0,finished=false;
   card.innerHTML=`<div class="count"><span class="eyebrow">${esc(p.prompt)} · ${i+1} of ${probs.length}${allowSkip?' · '+esc(T[p.topic].name):''}</span>${mode==='guided'?'<span class="chip">Hints on</span>':''}</div>
    <div><div class="q">${M(p.q)}</div>${p.given?`<div class="given">${M(p.given)}</div>`:''}</div>
-   <div class="ans"><input id="r-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="${p.type==='eq'?(p.frac?'e.g. x = 3/4':'x = …'):p.type==='expr'?(p.frac?'e.g. 5/6x + 2':'e.g. 3x + 5'):(p.frac?'e.g. −3/4':'Your answer')}"><button class="btn" id="r-check">Check</button></div>
-   <div class="keys">${['−','x',...(p.type==='expr'&&/y/.test(p.q)?['y']:[]),...(p.frac||/\[\[f:/.test(p.q+(p.given||''))?['/']:[]),'(',')'].map(k=>`<button class="key" type="button" data-k="${k}">${k==='x'||k==='y'?`<i>${k}</i>`:k}</button>`).join('')}</div>
+   <div class="ans"><input id="r-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="${p.type==='ineq'?'e.g. x ≥ −4':p.type==='lit'?'e.g. '+(p.ansShow.split(' =')[0].replace('$',''))+' = …':p.type==='eq'?(p.frac?'e.g. x = 3/4':'x = …'):p.type==='expr'?(p.frac?'e.g. 5/6x + 2':'e.g. 3x + 5'):(p.frac?'e.g. −3/4':'Your answer')}"><button class="btn" id="r-check">Check</button></div>
+   <div class="keys">${keysFor(p).map(k=>`<button class="key${k.set?' word':''}" type="button" ${k.set?`data-set="${esc(k.set)}"`:`data-k="${esc(k.k)}"`}>${/^[a-zA-Z]$/.test(k.k||'')?`<i>${esc(k.k)}</i>`:esc(k.label||k.k)}</button>`).join('')}</div>
    <div id="r-hints" class="hintbox" hidden></div>
    <div id="r-fb" hidden></div>
    <div id="r-extra"></div>
    <div class="row"><button class="btn sec" id="r-hint" ${mode==='guided'?'':'hidden'}>Show a hint</button>${allowSkip?'<button class="btn ghost" id="r-skip">Haven’t learned this yet</button>':''}<button class="btn" id="r-next" hidden>${i+1<probs.length?'Next problem':'Finish'}</button></div>`;
   const inp=$('r-in'),fb=$('r-fb'),hb=$('r-hints'),hintBtn=$('r-hint'),nextBtn=$('r-next'),chk=$('r-check'),extra=$('r-extra');
-  card.querySelectorAll('.key').forEach(k=>k.onclick=()=>{const c=k.dataset.k;const st=inp.selectionStart??inp.value.length,en=inp.selectionEnd??st;inp.value=inp.value.slice(0,st)+c+inp.value.slice(en);inp.focus();inp.setSelectionRange(st+c.length,st+c.length)});
+  card.querySelectorAll('.key').forEach(k=>k.onclick=()=>{if(k.dataset.set!=null){inp.value=k.dataset.set;inp.focus();return}const c=k.dataset.k;const st=inp.selectionStart??inp.value.length,en=inp.selectionEnd??st;inp.value=inp.value.slice(0,st)+c+inp.value.slice(en);inp.focus();inp.setSelectionRange(st+c.length,st+c.length)});
   const addHint=()=>{if(hints>=p.steps.length)return;hb.hidden=false;const d=document.createElement('p');d.innerHTML=`<span class="eyebrow">Step ${hints+1}</span> ${M(p.steps[hints])}`;hb.append(d);hints++;if(hints>=p.steps.length)hintBtn.disabled=true};
   const say=(cls,html)=>{fb.hidden=false;fb.className='fb '+cls;fb.innerHTML=html};
-  const item=(given,ok)=>({topic:p.topic,q:plain((p.prompt==='Evaluate'?'Evaluate ':p.prompt==='Solve for x'?'Solve ':'Simplify ')+p.q+(p.given?' '+p.given:'')),qd:(p.prompt==='Evaluate'?'':'')+p.q+(p.given?'  ·  '+p.given:''),given,ans:p.ansShow,ok,hints});
+  const item=(given,ok)=>({topic:p.topic,q:plain(p.prompt+': '+p.q+(p.given&&p.type!=='lit'?' '+p.given:'')),qd:p.q+(p.given?'  ·  '+p.given:''),given,ans:p.ansShow,ok,hints});
   const finish=(given,ok,showSteps)=>{finished=true;inp.disabled=true;chk.disabled=true;hintBtn.hidden=true;const sk=$('r-skip');if(sk)sk.hidden=true;nextBtn.hidden=false;
    results.push(item(given,ok));
    if(showSteps){const box=document.createElement('div');box.style.display='grid';box.style.gap='8px';
@@ -569,14 +711,14 @@ function tally(r){return r?{c:r.filter(x=>x.ok).length,t:r.length,h:r.reduce((s,
 function renderWrap(body){
  const s=S.sess,R=s.res;
  const missed=[...(R.warmup||[]),...(R.practice||[]),...(R.check||[]),...(R.diag||[])].filter(x=>!x.ok);
- const rec={id:s.id,ts:Date.now(),kind:s.kind,topic:s.topic,minutes:Math.max(1,Math.round((Date.now()-s.start)/60000)),parts:{},missed:missed.slice(0,20).map(({topic,q,qd,given,ans,hints})=>({topic,q,qd,given,ans,hints})),note:''};
+ const rec={id:s.id,ts:Date.now(),kind:s.kind,topic:s.kind==='diagnostic'?null:s.topic,unit:s.kind==='diagnostic'?s.topic:(unitOf(s.topic)||{}).id,minutes:Math.max(1,Math.round((Date.now()-s.start)/60000)),parts:{},missed:missed.slice(0,20).map(({topic,q,qd,given,ans,hints})=>({topic,q,qd,given,ans,hints})),note:''};
  for(const k of ['warmup','practice','check']){const t=tally(R[k]);if(t)rec.parts[k]=t}
  if(R.diag){rec.perTopic={};for(const x of R.diag){const pt=rec.perTopic[x.topic]||(rec.perTopic[x.topic]={c:0,t:0});pt.t++;if(x.ok)pt.c++}rec.parts.diag=tally(R.diag)}
  if(!s.saved){s.saved=true;saveAttempt(rec)}endTimer();
  let head='',tiles='';
- if(s.kind==='diagnostic'){const d=rec.parts.diag;let start=TOPICS.find(t=>rec.perTopic[t.id].c<2);
-  head=`<h2>${d.c} of ${d.t} correct</h2><p class="muted">${start?`Suggested starting point: <mark>${esc(start.name)}</mark>. It’s the first topic where he missed something.`:'Every topic came back clean. Use the topic list for extra practice whenever you like.'}</p>`;
-  tiles=`<div class="card" style="padding:8px 20px">${TOPICS.map(t=>{const pt=rec.perTopic[t.id];return `<div class="mrow"><span>${esc(t.name)}</span><div class="bar"><span style="width:${pt.c/pt.t*100}%"></span></div><span class="pct">${pt.c}/${pt.t}</span></div>`}).join('')}</div>`;
+ if(s.kind==='diagnostic'){const d=rec.parts.diag;const dts=TOPICS.filter(t=>rec.perTopic[t.id]);let start=dts.find(t=>rec.perTopic[t.id].c<2);
+  head=`<h2>${d.c} of ${d.t} correct</h2><p class="muted">${start?`Suggested starting point: <mark>${esc(start.name)}</mark>. It’s the first topic where he missed something.`:'Every topic in this unit came back clean. Move on to the next unit, or use the topic list for extra practice.'}</p>`;
+  tiles=`<div class="card" style="padding:8px 20px">${dts.map(t=>{const pt=rec.perTopic[t.id];return `<div class="mrow"><span>${esc(t.name)}</span><div class="bar"><span style="width:${pt.c/pt.t*100}%"></span></div><span class="pct">${pt.c}/${pt.t}</span></div>`}).join('')}</div>`;
   s.nextTopic=start?start.id:null}
  else{const ch=rec.parts.check;const pct=ch?ch.c/ch.t:null;
   head=`<h2>${pct==null?'Practice finished':pct>=.85?'That topic looks solid':pct>=.6?'Getting there':'Worth another round'}</h2><p class="muted">${pct==null?'Run the quiz when he feels ready, so the progress page has a score to track.':pct>=.85?'Next time, move on to the next topic. The warm-up will keep this one fresh.':pct>=.6?'One more session on this topic should lock it in.':'Go back through the lesson together, then do another practice set before the next check.'}</p>`;
@@ -594,13 +736,14 @@ function renderWrap(body){
 
 /* ---------- progress ---------- */
 const KIND={session:'Full session',practice:'Practice',quiz:'Quiz',diagnostic:'Mixed check-in'};
+const diagLabel=r=>{const u=r.unit&&UNITS.find(x=>x.id===r.unit);return u?`Unit ${u.n} check-in: ${u.name}`:'Mixed check-in'};
 function renderProgress(){
  const v=$('v-progress'),L=store.list;
  const week=L.filter(r=>Date.now()-r.ts<7*864e5);
  const probs=week.reduce((s,r)=>s+Object.values(r.parts||{}).reduce((a,p)=>a+(r.kind==='diagnostic'?0:p.t),0)+(r.parts&&r.parts.diag?r.parts.diag.t:0),0);
  const right=week.reduce((s,r)=>s+Object.values(r.parts||{}).reduce((a,p)=>a+(r.kind==='diagnostic'?0:p.c),0)+(r.parts&&r.parts.diag?r.parts.diag.c:0),0);
  const mins=week.reduce((s,r)=>s+(r.minutes||0),0);
- const mrows=TOPICS.map(t=>{const m=mastery(t.id),st=status(m);return `<div class="mrow"><span>${t.idx+1}. ${esc(t.name)} <span class="chip ${st.c}" style="margin-left:4px">${st.l}</span></span><div class="bar"><span style="width:${m==null?0:Math.round(m*100)}%"></span></div><span class="pct">${m==null?'—':Math.round(m*100)+'%'}</span></div>`}).join('');
+const mrows=UNITS.filter(u=>u.topics).map(u=>`<div class="mhead">Unit ${u.n} · ${esc(u.name)}</div>`+u.topics.map(id=>T[id]).map(t=>{const m=mastery(t.id),st=status(m);return `<div class="mrow"><span>${t.idx+1}. ${esc(t.name)} <span class="chip ${st.c}" style="margin-left:4px">${st.l}</span></span><div class="bar"><span style="width:${m==null?0:Math.round(m*100)}%"></span></div><span class="pct">${m==null?'—':Math.round(m*100)+'%'}</span></div>`}).join('')).join('');
  v.innerHTML=`<div style="display:grid;gap:8px"><h1>Progress</h1><p class="muted">Mastery is the average of the two most recent no-hint scores for each topic (the Check step, quizzes, and the check-in).</p></div>
   <div class="scores"><div class="score"><span class="eyebrow">Sessions · 7 days</span><b>${week.length}</b></div><div class="score"><span class="eyebrow">Time · 7 days</span><b>${mins} min</b></div><div class="score"><span class="eyebrow">Accuracy · 7 days</span><b>${probs?Math.round(right/probs*100)+'%':'—'}</b><span class="muted" style="font-size:.85rem">${right} of ${probs} problems</span></div></div>
   <div style="display:grid;gap:8px"><h2>By topic</h2><div class="tbl"><div style="min-width:420px;border-top:1px solid var(--line)">${mrows}</div></div></div>
@@ -616,7 +759,7 @@ function renderProgress(){
  const ul=$('p-hist');if(!ul)return;
  L.forEach(r=>{const li=document.createElement('li');const P=r.parts||{};
   const bits=[P.warmup&&`warm-up ${P.warmup.c}/${P.warmup.t}`,P.practice&&`practice ${P.practice.c}/${P.practice.t} (${P.practice.h} hints)`,P.check&&`check ${P.check.c}/${P.check.t}`,P.diag&&`${P.diag.c}/${P.diag.t} correct`].filter(Boolean).join(' · ');
-  li.innerHTML=`<div class="h1"><strong>${esc(r.kind==='diagnostic'?KIND.diagnostic:(T[r.topic]?T[r.topic].name:'')+' · '+KIND[r.kind])}</strong><span class="meta">${fmtDate(r.ts)} · ${r.minutes||1} min</span></div>
+  li.innerHTML=`<div class="h1"><strong>${esc(r.kind==='diagnostic'?diagLabel(r):(T[r.topic]?T[r.topic].name:'')+' · '+KIND[r.kind])}</strong><span class="meta">${fmtDate(r.ts)} · ${r.minutes||1} min</span></div>
    <div class="meta">${bits}</div>${r.note?`<p style="font-size:.95rem">“${esc(r.note)}”</p>`:''}
    <div class="row" style="justify-content:space-between">${r.missed&&r.missed.length?`<details style="flex:1 1 100%"><summary>${r.missed.length} missed problem${r.missed.length>1?'s':''}</summary><ul class="missed" style="margin-top:10px">${r.missed.map(m=>`<li><div class="q">${M(m.qd||m.q)}</div><div>${m.given?`His answer: <span class="m">${M(m.given)}</span> · `:'Skipped · '}Correct: <span class="m">${M(m.ans)}</span></div></li>`).join('')}</ul></details>`:''}
    <button class="btn ghost sm" data-del="${esc(r.id)}">Remove</button></div>`;
@@ -643,6 +786,9 @@ function renderGuide(){$('v-guide').innerHTML=`<div class="guide">
  <div style="display:grid;gap:10px"><h2>Tips for typing answers</h2><ul>
   <li>Numbers: <span class="m">7</span>, <span class="m">−3</span> (a regular minus sign works).</li>
   <li>Equations: <span class="m">5</span> or <span class="m"><i>x</i> = 5</span> are both fine.</li>
+  <li>Inequalities: type <span class="m"><i>x</i> &gt;= −4</span> or use the ≤ ≥ buttons. Compound answers look like <span class="m">−3 &lt; <i>x</i> ≤ 4</span> or <span class="m"><i>x</i> &lt; 1 or <i>x</i> &gt; 5</span>.</li>
+  <li>Literal equations: type the expression with letters, like <span class="m">(P − 2w)/2</span>. Any equivalent form counts.</li>
+  <li>When <i>x</i> cancels out of an equation, tap “No solution” or “All real numbers.”</li>
   <li>Fractions: type <span class="m">3/4</span>, <span class="m">−5/2</span>, or a mixed number like <span class="m">2 1/2</span>. Fractions must be in lowest terms; an unreduced answer gets a nudge instead of being marked wrong.</li>
   <li>Expressions: <span class="m">3<i>x</i> + 5</span> or <span class="m">−<i>x</i> + 12</span>. Answers must be fully simplified; an unsimplified but equal answer gets a nudge instead of being marked wrong.</li>
   <li>The buttons under the answer box add <span class="m">−</span>, <span class="m"><i>x</i></span> and parentheses on a phone keyboard.</li>
