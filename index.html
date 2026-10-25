@@ -178,6 +178,22 @@ const P=n=>n<0?'('+N(n)+')':N(n);
 const sg=n=>n<0?'−':'+';
 const A=Math.abs;
 function lin(terms){let out='';for(const [c,v] of terms){if(c===0)continue;const a=A(c);const body=v?(a===1?v:a+v):''+a;out=out?out+' '+sg(c)+' '+body:(c<0?'−':'')+body}return out||'0'}
+const gcd=(a,b)=>{a=A(a);b=A(b);while(b){[a,b]=[b,a%b]}return a||1};
+const lcm=(a,b)=>A(a*b)/gcd(a,b);
+function F(n,d=1){if(d<0){n=-n;d=-d}const g=gcd(n,d);return {n:n/g,d:d/g}}
+const fadd=(a,b)=>F(a.n*b.d+b.n*a.d,a.d*b.d),fsub=(a,b)=>F(a.n*b.d-b.n*a.d,a.d*b.d),fmul=(a,b)=>F(a.n*b.n,a.d*b.d);
+const fv=f=>f.n/f.d;
+const FS=f=>f.d===1?N(f.n):(f.n<0?'−':'')+`[[f:${A(f.n)}|${f.d}]]`;
+const FP=f=>f.n<0?'('+FS(f)+')':FS(f);
+const U=(n,d)=>(n<0?'−':'')+`[[f:${A(n)}|${d}]]`;
+function rf(neg=true,ds=[2,3,4,5,6,8]){const d=pick(ds);let n;do{n=ri(1,d-1)}while(gcd(n,d)!==1);return F(neg&&Math.random()<.35?-n:n,d)}
+function coefF(){const d=pick([2,3,4,5]);let n;do{n=ri(1,7)}while(n===d||gcd(n,d)!==1);return F(Math.random()<.25?-n:n,d)}
+function linF(terms){let show='',plain='';
+ for(const [c,v] of terms){if(c.n===0)continue;const a=F(A(c.n),c.d),one=a.n===1&&a.d===1;
+  const bs=v?(one?v:(a.d===1?a.n:`[[f:${a.n}|${a.d}]]`)+v):FS(a), bp=v?(one?v:(a.d===1?a.n:`${a.n}/${a.d}`)+v):(a.d===1?''+a.n:`${a.n}/${a.d}`);
+  if(!show){show=(c.n<0?'−':'')+bs;plain=(c.n<0?'-':'')+bp}else{show+=' '+sg(c.n)+' '+bs;plain+=(c.n<0?' - ':' + ')+bp}}
+ return {show:show||'0',plain:plain||'0'}}
+function reduceStep(n,d){const r=F(n,d);return (gcd(n,d)>1)?`Reduce: divide the top and bottom by ${gcd(n,d)}. ${U(n,d)} = ${FS(r)}`:`That’s already in lowest terms: ${FS(r)}`}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function M(s){let h=esc(s);h=h.replace(/\[\[f:([^|\]]+)\|([^\]]+)\]\]/g,(m,a,b)=>`<span class="frac"><span>${a}</span><span>${b}</span></span>`);
   return h.replace(/(^|[^A-Za-z&;#])([xy])(?![A-Za-z])/g,'$1<i class="v">$2</i>')}
@@ -199,6 +215,12 @@ const TOPICS=[
   ex:{q:'−8 − (−5) + 2 × (−3)',steps:['Multiply first: 2 × (−3) = −6, which leaves −8 − (−5) + (−6)','Subtracting −5 is adding 5: −8 + 5 + (−6)','−8 + 5 = −3','−3 + (−6) = −9']},
   watch:'−3 − 4 is −7 (you move further left). It is not 1 or −1.',
   talk:'Ask: “Are we moving left or right on the number line?”'},
+ {id:'fractions',name:'Fraction skills',idea:'Fractions follow the same rules as whole numbers. You need a common denominator to add or subtract, and you never need one to multiply or divide.',
+  rules:['Add or subtract: rewrite both with a common denominator, then combine the tops','Multiply: top × top over bottom × bottom','Divide: keep the first, change ÷ to ×, flip the second','Reduce at the end: divide top and bottom by their greatest common factor','A negative fraction carries its sign in front: −[[f:3|4]]'],
+  memo:'Bottoms must match to add or subtract. For division: keep, change, flip.',
+  ex:{q:'[[f:2|3]] − [[f:3|4]]',steps:['The common denominator of 3 and 4 is 12','[[f:2|3]] = [[f:8|12]] and [[f:3|4]] = [[f:9|12]]','[[f:8|12]] − [[f:9|12]] = −[[f:1|12]]']},
+  watch:'Adding the bottoms. [[f:1|2]] + [[f:1|3]] is [[f:5|6]], not [[f:2|5]].',
+  talk:'Ask: “Are we adding or multiplying? Do the bottoms need to match?”'},
  {id:'evaluate',name:'Evaluating expressions',idea:'A variable is a placeholder for a number. To evaluate, swap the letter for its number, then do the arithmetic.',
   rules:['Put the number in parentheses when you substitute, especially a negative','A number next to a letter means multiply: 3x means 3 × x','Then follow the order of operations'],
   memo:'Substitute, then simplify. Parentheses first, every time.',
@@ -228,7 +250,13 @@ const TOPICS=[
   memo:'Getting dressed is socks, then shoes. Undoing it is shoes, then socks.',
   ex:{q:'3x + 5 = −10',steps:['Subtract 5 from both sides: 3x = −15','Divide both sides by 3: x = −5','Check: 3(−5) + 5 = −15 + 5 = −10 ✓']},
   watch:'Dividing first without dividing everything. In 3x + 5 = −10, dividing only the 3x by 3 leaves the 5 behind.',
-  talk:'Ask him to say the two steps out loud before he writes them.'}
+  talk:'Ask him to say the two steps out loud before he writes them.'},
+ {id:'fraceq',name:'Equations with fractions',idea:'Solve these the same way as before. Two extra moves help: multiply by the reciprocal to undo a fraction in front of x, or multiply every term by the common denominator to clear all the fractions at once.',
+  rules:['To undo [[f:2|3]]x, multiply both sides by the reciprocal [[f:3|2]]','To clear fractions, multiply every term on both sides by the least common denominator','When a fraction bar covers a whole side, multiply both sides by its bottom first','Answers can be fractions. Leave them in lowest terms'],
+  memo:'Clearing the fractions turns it into an equation you already know how to solve.',
+  ex:{q:'[[f:x|4]] + [[f:1|2]] = [[f:7|4]]',steps:['The common denominator is 4, so multiply every term by 4','4 × [[f:x|4]] = x, 4 × [[f:1|2]] = 2, and 4 × [[f:7|4]] = 7, which leaves x + 2 = 7','Subtract 2 from both sides: x = 5','Check: [[f:5|4]] + [[f:2|4]] = [[f:7|4]] ✓']},
+  watch:'Multiplying only some of the terms. Every term on both sides gets multiplied by the denominator.',
+  talk:'Ask: “What number would get rid of all the bottoms?”'}
 ];
 TOPICS.forEach((t,i)=>t.idx=i);
 const T=Object.fromEntries(TOPICS.map(t=>[t.id,t]));
@@ -250,7 +278,31 @@ const GEN={
   if(f===2){a=nzBig(-9,9);b=nzBig(-9,9);if(a>0&&b>0)a=-a;q=`${N(a)} × ${P(b)}`;ans=a*b;steps=[(a<0)===(b<0)?'The signs are the same, so the answer is positive.':'The signs are different, so the answer is negative.',`${A(a)} × ${A(b)} = ${A(ans)}, so the answer is ${N(ans)}.`]}
   if(f===3){b=nzBig(-9,9);const k=nzBig(-9,9);a=b*k;if(a>0&&b>0)b=-b;ans=a/b;q=`${N(a)} ÷ ${P(b)}`;steps=[(a<0)===(b<0)?'The signs are the same, so the answer is positive.':'The signs are different, so the answer is negative.',`${A(a)} ÷ ${A(b)} = ${A(ans)}, so the answer is ${N(ans)}.`]}
   return {prompt:'Simplify',q,type:'num',ans,ansShow:N(ans),steps}},
- evaluate(){const f=ri(0,3);let a,b,x,y,q,given,ans,steps;
+ fractions(){const f=ri(0,2);let a=rf(),b=rf(),q,steps,r;
+  if(f===0){while(b.d===a.d||lcm(a.d,b.d)>24)b=rf();const op=pick(['+','−']);const L=lcm(a.d,b.d),an=a.n*L/a.d,bn=b.n*L/b.d,num=op==='+'?an+bn:an-bn;r=F(num,L);
+   q=`${FS(a)} ${op} ${FP(b)}`;
+   steps=[`To ${op==='+'?'add':'subtract'}, the bottoms must match. The least common denominator of ${a.d} and ${b.d} is ${L}.`,`Rewrite: ${FS(a)} = ${U(an,L)} and ${FS(b)} = ${U(bn,L)}`,`Combine the tops: ${N(an)} ${op} ${P(bn)} = ${N(num)}, so you get ${U(num,L)}`,reduceStep(num,L)]}
+  if(f===1){if(Math.random()<.3)b=F(nz(-8,9));const n=a.n*b.n,d=a.d*b.d;r=F(n,d);q=`${FS(a)} × ${FP(b)}`;
+   steps=[b.d===1?`Write ${N(b.n)} as a fraction: ${U(b.n,1)}.`:'No common denominator needed to multiply.',`Multiply the tops: ${N(a.n)} × ${P(b.n)} = ${N(n)}. Multiply the bottoms: ${a.d} × ${b.d} = ${d}.`,`That gives ${U(n,d)}`,reduceStep(n,d)]}
+  if(f===2){const rc=F(b.d,b.n),n=a.n*rc.n,d=a.d*rc.d;r=F(n,d);q=`${FS(a)} ÷ ${FP(b)}`;
+   steps=[`Keep, change, flip: keep ${FS(a)}, change ÷ to ×, and flip ${FS(b)} to ${FS(rc)}.`,`Now multiply: ${FS(a)} × ${FP(rc)}. Tops: ${N(a.n)} × ${P(rc.n)} = ${N(n)}. Bottoms: ${a.d} × ${rc.d} = ${d}.`,`That gives ${U(n,d)}`,reduceStep(n,d)]}
+  return {prompt:'Simplify',q,type:'num',ans:fv(r),frac:true,ansShow:FS(r),steps}},
+ fraceq(){const f=ri(0,3);let q,x,steps;
+  if(f===0){const c=coefF(),rc=F(c.d,c.n);let rhs;
+   if(Math.random()<.5){x=F(c.d*nz(-5,5));rhs=fmul(c,x)}else{rhs=F(nz(-9,9));x=fmul(rhs,rc)}
+   q=`${linF([[c,'x']]).show} = ${FS(rhs)}`;
+   steps=[`x is multiplied by ${FS(c)}. Undo it by multiplying both sides by the reciprocal, ${FS(rc)}.`,`x = ${FS(rhs)} × ${FP(rc)}`,`x = ${FS(x)}`]}
+  if(f===1){const a=pick([2,3,4]),b=rf(true,[2,3,4,6]);x=F(nz(-9,9));const c=fadd(F(x.n,a),b);const L=lcm(lcm(a,b.d),c.d);const k=L/a,bn=b.n*L/b.d,cn=c.n*L/c.d;
+   q=`[[f:x|${a}]] ${sg(b.n)} ${FS(F(A(b.n),b.d))} = ${FS(c)}`;
+   steps=[`Clear the fractions. The least common denominator is ${L}, so multiply every term by ${L}.`,`That leaves ${lin([[k,'x'],[bn,'']])} = ${N(cn)}`,`${bn<0?`Add ${-bn} to`:`Subtract ${bn} from`} both sides: ${lin([[k,'x']])} = ${N(cn-bn)}`,k===1?`x = ${N(x.n)}`:`Divide both sides by ${k}: x = ${N(x.n)}`]}
+  if(f===2){const a=ri(2,6),b=nz(-9,9),k=nz(-6,6);x=F(a*k-b);
+   q=`[[f:${lin([[1,'x'],[b,'']])}|${a}]] = ${N(k)}`;
+   steps=[`The fraction bar covers the whole left side, so multiply both sides by ${a}: ${lin([[1,'x'],[b,'']])} = ${N(a*k)}`,`${b<0?`Add ${-b} to`:`Subtract ${b} from`} both sides: x = ${N(x.n)}`,`Check: [[f:${N(x.n)} ${sg(b)} ${A(b)}|${a}]] = [[f:${N(x.n+b)}|${a}]] = ${N(k)} ✓`]}
+  if(f===3){const c=coefF(),rc=F(c.d,c.n),b=nz(-10,10);x=F(c.d*nz(-5,5));const e=fv(fmul(c,x))+b;
+   q=`${linF([[c,'x'],[F(b),'']]).show} = ${N(e)}`;
+   steps=[`Undo the ${b<0?'subtraction':'addition'} first: ${b<0?`add ${-b} to`:`subtract ${b} from`} both sides. That leaves ${linF([[c,'x']]).show} = ${N(e-b)}`,`Multiply both sides by the reciprocal ${FS(rc)}: x = ${N(e-b)} × ${FP(rc)}`,`x = ${FS(x)}`]}
+  return {prompt:'Solve for x',q,type:'eq',ans:fv(x),frac:true,ansShow:`x = ${FS(x)}`,steps}},
+ evaluate(){const f=ri(0,4);let a,b,x,y,q,given,ans,steps;
   if(f===0){a=nzBig(-6,7);b=nz(-10,10);x=nz(-5,6);const ax=a*x;ans=ax+b;q=lin([[a,'x'],[b,'']]);given=`when x = ${N(x)}`;
    steps=[`Replace x with (${N(x)}): ${N(a)}(${N(x)}) ${sg(b)} ${A(b)}`,`Multiply: ${N(a)} × ${P(x)} = ${N(ax)}, which leaves ${N(ax)} ${sg(b)} ${A(b)}.`,`${N(ax)} ${sg(b)} ${A(b)} = ${N(ans)}`]}
   if(f===1){x=nz(-6,6);b=nz(-12,12);ans=x*x+b;q=lin([[1,'x²'],[b,'']]);given=`when x = ${N(x)}`;
@@ -259,16 +311,22 @@ const GEN={
    steps=[`Replace x with (${N(x)}): ${a}(${N(x)} − ${b})`,`Parentheses first: ${N(x)} − ${b} = ${N(x-b)}`,`${a} × ${P(x-b)} = ${N(ans)}`]}
   if(f===3){a=nzBig(-5,6);b=nzBig(-5,6);x=nz(-4,5);y=nz(-4,5);ans=a*x+b*y;q=lin([[a,'x'],[b,'y']]);given=`when x = ${N(x)} and y = ${N(y)}`;
    steps=[`Replace x with (${N(x)}) and y with (${N(y)}): ${N(a)}(${N(x)}) ${sg(b)} ${A(b)}(${N(y)})`,`${N(a)} × ${P(x)} = ${N(a*x)} and ${N(b)} × ${P(y)} = ${N(b*y)}`,`${N(a*x)} + ${P(b*y)} = ${N(ans)}`]}
+  if(f===4){const xv=rf();a=xv.d*nz(-3,4);b=nz(-9,9);const ax=a*xv.n/xv.d;ans=ax+b;q=lin([[a,'x'],[b,'']]);given=`when x = ${FS(xv)}`;
+   steps=[`Replace x with (${FS(xv)}): ${N(a)}(${FS(xv)}) ${sg(b)} ${A(b)}`,`${N(a)} × ${FP(xv)}: divide ${A(a)} by ${xv.d} to get ${A(a)/xv.d}, then multiply by ${A(xv.n)}. That’s ${N(ax)}.`,`${N(ax)} ${sg(b)} ${A(b)} = ${N(ans)}`]}
   return {prompt:'Evaluate',q,given,type:'num',ans,ansShow:N(ans),steps}},
- like(){const f=ri(0,1);let q,at,steps;
+ like(){const f=ri(0,2);let q,at,steps;
   if(f===0){let a,c;do{a=nz(-9,9);c=nz(-9,9)}while(a+c===0);const b=nz(-12,12),d=nz(-12,12);
    q=lin(pick([[[a,'x'],[b,''],[c,'x'],[d,'']],[[a,'x'],[b,''],[d,''],[c,'x']],[[b,''],[a,'x'],[d,''],[c,'x']]]));at=[[a+c,'x'],[b+d,'']];
    steps=[`Find the x-terms: ${lin([[a,'x']])} and ${lin([[c,'x']])}. Together they make ${lin([[a+c,'x']])}.`,`Find the plain numbers: ${N(b)} and ${N(d)}. Together they make ${N(b+d)}.`,`Put it together: ${lin(at)}`]}
-  else{let a,c,b,d;do{a=nz(-8,8);c=nz(-8,8);b=nz(-8,8);d=nz(-8,8)}while(a+c===0||b+d===0);
+  if(f===1){let a,c,b,d;do{a=nz(-8,8);c=nz(-8,8);b=nz(-8,8);d=nz(-8,8)}while(a+c===0||b+d===0);
    q=lin(pick([[[a,'x'],[b,'y'],[c,'x'],[d,'y']],[[a,'x'],[b,'y'],[d,'y'],[c,'x']]]));at=[[a+c,'x'],[b+d,'y']];
    steps=[`The x-terms are ${lin([[a,'x']])} and ${lin([[c,'x']])}. Together: ${lin([[a+c,'x']])}.`,`The y-terms are ${lin([[b,'y']])} and ${lin([[d,'y']])}. Together: ${lin([[b+d,'y']])}.`,`Put it together: ${lin(at)}`]}
+  if(f===2){let a,c;do{a=rf(false,[2,3,4,6]);c=rf(true,[2,3,4,6])}while(a.d===c.d||lcm(a.d,c.d)>12||fadd(a,c).n===0);const b=nz(-9,9),d=nz(-9,9),sm=fadd(a,c),L=lcm(a.d,c.d);
+   q=linF(pick([[[a,'x'],[F(b),''],[c,'x'],[F(d),'']],[[a,'x'],[c,'x'],[F(b),''],[F(d),'']]])).show;const ans=linF([[sm,'x'],[F(b+d),'']]);
+   steps=[`The x-terms are ${linF([[a,'x']]).show} and ${linF([[c,'x']]).show}. Add the fractions using the common denominator ${L}: ${U(a.n*L/a.d,L)} ${sg(c.n)} ${U(A(c.n)*L/c.d,L)} = ${FS(sm)}.`,`The plain numbers: ${N(b)} and ${N(d)} make ${N(b+d)}.`,`Put it together: ${ans.show}`];
+   return {prompt:'Simplify',q,type:'expr',ansExpr:ans.plain,ansShow:ans.show,frac:true,steps}}
   return {prompt:'Simplify',q,type:'expr',ansExpr:lin(at),ansShow:lin(at),steps}},
- distribute(){const f=ri(0,3);let q,at,steps;
+ distribute(){const f=ri(0,4);let q,at,steps;
   if(f===0){const a=ri(2,9),b=nz(-9,9);q=`${a}(${lin([[1,'x'],[b,'']])})`;at=[[a,'x'],[a*b,'']];
    steps=[`Multiply ${a} by each term inside the parentheses.`,`${a} × x = ${a}x and ${a} × ${P(b)} = ${N(a*b)}`,`Answer: ${lin(at)}`]}
   if(f===1){const a=-ri(2,9),b=ri(1,9);q=`${N(a)}(x − ${b})`;at=[[a,'x'],[-a*b,'']];
@@ -277,6 +335,8 @@ const GEN={
    steps=[`Distribute: ${N(a)} × ${b}x = ${N(a*b)}x and ${N(a)} × ${P(c)} = ${N(a*c)}.`,`Now you have ${lin([[a*b,'x'],[a*c,''],[d,'']])}.`,`Combine the plain numbers: ${N(a*c)} ${sg(d)} ${A(d)} = ${N(a*c+d)}. Answer: ${lin(at)}`]}
   if(f===3){const a=ri(2,7),b=nz(-8,8);let c;do{c=nz(-6,6)}while(a+c===0);q=`${a}(${lin([[1,'x'],[b,'']])}) ${sg(c)} ${A(c)===1?'':A(c)}x`;at=[[a+c,'x'],[a*b,'']];
    steps=[`Distribute: ${a} × x = ${a}x and ${a} × ${P(b)} = ${N(a*b)}.`,`Now you have ${lin([[a,'x'],[a*b,''],[c,'x']])}.`,`Combine the x-terms: ${a}x ${sg(c)} ${A(c)}x = ${lin([[a+c,'x']])}. Answer: ${lin(at)}`]}
+  if(f===4){const d=pick([2,3,4]);const k=F(Math.random()<.3?-1:1,d),p=d*ri(1,4),r=d*nz(-5,5);const cp=fv(k)*p,cr=fv(k)*r;q=`${FS(k)}(${lin([[p,'x'],[r,'']])})`;at=[[cp,'x'],[cr,'']];
+   steps=[`Multiply ${FS(k)} by each term inside. Multiplying by ${FS(F(1,d))} is the same as dividing by ${d}.`,`${FS(k)} × ${p}x = ${lin([[cp,'x']])} and ${FS(k)} × ${P(r)} = ${N(cr)}`,`Answer: ${lin(at)}`]}
   return {prompt:'Simplify',q,type:'expr',ansExpr:lin(at),ansShow:lin(at),steps}},
  onestep(){const f=ri(0,3);let x=nz(-12,12),a,b,q,steps;
   if(f===0){a=ri(1,15);b=x+a;q=`x + ${a} = ${N(b)}`;steps=[`${a} is added to x. Undo it by subtracting ${a} from both sides.`,`x = ${N(b)} − ${a}`,`x = ${N(x)}. Check: ${N(x)} + ${a} = ${N(b)} ✓`]}
@@ -323,8 +383,11 @@ function simplified(s){s=norm(s).replace(/\s/g,'');if(s.includes('('))return fal
 function check(prob,input){
  if(!String(input).trim())return {ok:false,soft:true,msg:'Type an answer first.'};
  let s=String(input);if(prob.type==='eq')s=s.replace(/^\s*[xy]\s*=\s*/i,'');
+ if(prob.type!=='expr')s=norm(s).replace(/^\s*(-?)\s*(\d+)\s+(\d+)\s*\/\s*(\d+)\s*$/,(m,g,w,n,d)=>`${g}(${w}+${n}/${d})`);
  let U;try{U=parse(s)}catch(e){return {ok:false,soft:true,msg:'That answer couldn’t be read. Try something like 7, −3, or 4x + 2.'}}
- if(prob.type!=='expr'){if(U.vars.size)return {ok:false,soft:true,msg:'The answer should be a single number.'};return {ok:Math.abs(U.f({})-prob.ans)<1e-9}}
+ if(prob.type!=='expr'){if(U.vars.size)return {ok:false,soft:true,msg:'The answer should be a single number.'};const ok=Math.abs(U.f({})-prob.ans)<1e-9;
+  if(ok){const fr=norm(s).match(/(\d+)\s*\/\s*(\d+)/);if(fr&&gcd(+fr[1],+fr[2])>1)return {ok:false,soft:true,msg:'That’s the right value, but reduce the fraction to lowest terms.'}}
+  return {ok}}
  const K=parse(prob.ansExpr);
  for(const pt of [{x:1.37,y:-2.11},{x:-3.2,y:.73},{x:5.5,y:4.1}]){const d=U.f(pt)-K.f(pt);if(!(Math.abs(d)<1e-6))return {ok:false}}
  if(!simplified(s))return {ok:false,soft:true,msg:'That’s equal to the right answer, but it isn’t fully simplified yet. Clear the parentheses and combine like terms.'};
@@ -386,13 +449,13 @@ function renderHome(){
  let next;
  if(rec===null){next=`<div class="card next">
    <p class="eyebrow">Start here</p>
-   <p class="big">Take the 10-minute check-in</p>
-   <p class="muted">Fourteen questions, two from each topic below. It shows where he’s comfortable and where to begin, so the first session isn’t a guess.</p>
+   <p class="big">Take the 15-minute check-in</p>
+   <p class="muted">${TOPICS.length*2} questions, two from each topic below. It shows where he’s comfortable and where to begin, so the first session isn’t a guess.</p>
    <div class="row"><button class="btn" id="h-diag">Start the check-in</button><button class="btn sec" id="h-first">Skip it and start with topic 1</button></div></div>`}
  else if(rec==='all'){next=`<div class="card next"><p class="eyebrow">Next up</p><p class="big">Every topic is solid</p>
    <p class="muted">Run the mixed check-in to keep it fresh, or pick any topic for extra practice.</p>
    <div class="row"><button class="btn" id="h-diag">Mixed check-in</button></div></div>`}
- else{const m=mastery(rec.id),st=status(m);next=`<div class="card next"><p class="eyebrow">Next session · topic ${rec.idx+1} of 7</p>
+ else{const m=mastery(rec.id),st=status(m);next=`<div class="card next"><p class="eyebrow">Next session · topic ${rec.idx+1} of ${TOPICS.length}</p>
    <p class="big">${esc(rec.name)}</p>
    <p><span class="chip ${st.c}">${st.l}</span> <span class="muted">${m==null?'Not tried yet.':'Recent check score: '+Math.round(m*100)+'%'}</span></p>
    <p class="muted">About 25 minutes: warm-up, a short lesson, guided practice with hints, then a 5-question check.</p>
@@ -404,7 +467,7 @@ function renderHome(){
    <div class="sub"><button class="btn ghost sm" data-act="session" data-t="${t.id}">Full session</button><button class="btn ghost sm" data-act="lesson" data-t="${t.id}">Lesson</button><button class="btn ghost sm" data-act="practice" data-t="${t.id}">Practice</button><button class="btn ghost sm" data-act="quiz" data-t="${t.id}">Quiz</button></div></li>`}).join('');
  v.innerHTML=`<div style="display:grid;gap:8px"><h1>Algebra, a little at a time</h1><p class="muted">Short sessions for the two of you: learn one idea, practice it with hints, then check it. Scores and missed problems are logged so you can see what to review.</p></div>
   ${next}
-  <div style="display:grid;gap:12px"><div class="row" style="justify-content:space-between"><h2>The seven topics</h2><button class="btn sec sm" id="h-diag2">Mixed check-in</button></div>
+  <div style="display:grid;gap:12px"><div class="row" style="justify-content:space-between"><h2>The ${TOPICS.length} topics</h2><button class="btn sec sm" id="h-diag2">Mixed check-in</button></div>
   <p class="muted">These follow the usual order of an Algebra 1 course’s opening weeks. Each one leans on the ones above it.</p>
   <ul class="topics">${rows}</ul></div>
   <p class="foot">${saveLine()}</p>`;
@@ -427,7 +490,7 @@ function nextStage(){S.sess.stage++;renderStage();window.scrollTo(0,0)}
 function renderStage(){
  const s=S.sess,v=$('v-session'),key=s.stages[s.stage];
  const title=s.kind==='diagnostic'?'Mixed check-in':T[s.topic].name;
- v.innerHTML=`<div class="shead"><div class="row"><div><p class="eyebrow">${s.kind==='diagnostic'?'All seven topics':'Topic '+(T[s.topic].idx+1)}</p><h1>${esc(title)}</h1></div><span class="timer" id="s-timer">${mins()}</span></div>
+ v.innerHTML=`<div class="shead"><div class="row"><div><p class="eyebrow">${s.kind==='diagnostic'?'All '+TOPICS.length+' topics':'Topic '+(T[s.topic].idx+1)}</p><h1>${esc(title)}</h1></div><span class="timer" id="s-timer">${mins()}</span></div>
   ${s.stages.length>1?`<div class="stages">${s.stages.map((k,i)=>`<span class="stage ${i<s.stage?'done':i===s.stage?'on':''}">${STAGE_NAMES[k]}</span>`).join('')}</div>`:''}</div>
   <div id="s-body"></div>`;
  const body=$('s-body');
@@ -441,7 +504,7 @@ function renderStage(){
  if(key==='check'){body.append(intro('Five problems, no hints, one try each. This score is what the progress page tracks.'));
   return runner(body,genSet(s.topic,5),'test',r=>{s.res.check=r;nextStage()})}
  if(key==='diag'){const probs=[];TOPICS.forEach(t=>probs.push(...genSet(t.id,2)));
-  body.append(intro('Fourteen problems, two per topic, from easiest topic to hardest. No hints. It’s fine to skip anything he hasn’t seen yet.'));
+  body.append(intro(TOPICS.length*2+' problems, two per topic, from easiest topic to hardest. No hints. It’s fine to skip anything he hasn’t seen yet.'));
   return runner(body,probs,'test',r=>{s.res.diag=r;nextStage()},true)}
  if(key==='wrap')return renderWrap(body)}
 function intro(t){const p=document.createElement('p');p.className='muted';p.textContent=t;p.style.marginBottom='12px';return p}
@@ -470,8 +533,8 @@ function runner(host,probs,mode,done,allowSkip){
   const p=probs[i];let tries=0,hints=0,finished=false;
   card.innerHTML=`<div class="count"><span class="eyebrow">${esc(p.prompt)} · ${i+1} of ${probs.length}${allowSkip?' · '+esc(T[p.topic].name):''}</span>${mode==='guided'?'<span class="chip">Hints on</span>':''}</div>
    <div><div class="q">${M(p.q)}</div>${p.given?`<div class="given">${M(p.given)}</div>`:''}</div>
-   <div class="ans"><input id="r-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="${p.type==='eq'?'x = …':p.type==='expr'?'e.g. 3x + 5':'Your answer'}"><button class="btn" id="r-check">Check</button></div>
-   <div class="keys">${['−','x',...(p.type==='expr'&&/y/.test(p.q)?['y']:[]),'(',')'].map(k=>`<button class="key" type="button" data-k="${k}">${k==='x'||k==='y'?`<i>${k}</i>`:k}</button>`).join('')}</div>
+   <div class="ans"><input id="r-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="${p.type==='eq'?(p.frac?'e.g. x = 3/4':'x = …'):p.type==='expr'?(p.frac?'e.g. 5/6x + 2':'e.g. 3x + 5'):(p.frac?'e.g. −3/4':'Your answer')}"><button class="btn" id="r-check">Check</button></div>
+   <div class="keys">${['−','x',...(p.type==='expr'&&/y/.test(p.q)?['y']:[]),...(p.frac||/\[\[f:/.test(p.q+(p.given||''))?['/']:[]),'(',')'].map(k=>`<button class="key" type="button" data-k="${k}">${k==='x'||k==='y'?`<i>${k}</i>`:k}</button>`).join('')}</div>
    <div id="r-hints" class="hintbox" hidden></div>
    <div id="r-fb" hidden></div>
    <div id="r-extra"></div>
@@ -580,6 +643,7 @@ function renderGuide(){$('v-guide').innerHTML=`<div class="guide">
  <div style="display:grid;gap:10px"><h2>Tips for typing answers</h2><ul>
   <li>Numbers: <span class="m">7</span>, <span class="m">−3</span> (a regular minus sign works).</li>
   <li>Equations: <span class="m">5</span> or <span class="m"><i>x</i> = 5</span> are both fine.</li>
+  <li>Fractions: type <span class="m">3/4</span>, <span class="m">−5/2</span>, or a mixed number like <span class="m">2 1/2</span>. Fractions must be in lowest terms; an unreduced answer gets a nudge instead of being marked wrong.</li>
   <li>Expressions: <span class="m">3<i>x</i> + 5</span> or <span class="m">−<i>x</i> + 12</span>. Answers must be fully simplified; an unsimplified but equal answer gets a nudge instead of being marked wrong.</li>
   <li>The buttons under the answer box add <span class="m">−</span>, <span class="m"><i>x</i></span> and parentheses on a phone keyboard.</li>
  </ul></div>
